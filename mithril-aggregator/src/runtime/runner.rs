@@ -748,7 +748,7 @@ pub mod tests {
 
     #[tokio::test]
     async fn test_create_and_save_certificate_ok() {
-        let certificate_chain = setup_certificate_chain(5, 1);
+        let (certificate_chain, _) = setup_certificate_chain(5, 1);
         let first_certificate = certificate_chain[0].clone();
         let beacon = first_certificate.beacon.clone();
         let (mut deps, config) = initialize_dependencies().await;
@@ -777,7 +777,7 @@ pub mod tests {
         let certificate_store = deps.certificate_store.clone();
         let runner = AggregatorRunner::new(config, Arc::new(deps));
         let total_certificates = 5;
-        let certificate_chain = setup_certificate_chain(5, 1);
+        let (certificate_chain, _) = setup_certificate_chain(5, 1);
         let mut beacon = certificate_chain.first().unwrap().beacon.clone();
         beacon.epoch = beacon.epoch + 2;
         for certificate in certificate_chain.into_iter().rev() {
