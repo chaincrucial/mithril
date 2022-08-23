@@ -48,7 +48,13 @@ pub trait AggregatorRunnerTrait: Sync + Send {
     async fn is_new_beacon(&self, beacon: Option<Beacon>) -> Result<Option<Beacon>, RuntimeError>;
 
     /// Check if a certificate already have been issued for a given beacon.
-    async fn certificate_exist_for_beacon(&self, beacon: &Beacon) -> Result<bool, RuntimeError>;
+    async fn does_certificate_exist_for_beacon(
+        &self,
+        beacon: &Beacon,
+    ) -> Result<bool, RuntimeError>;
+
+    /// Check if a certificate chain is valid.
+    async fn is_certificate_chain_valid(&self) -> Result<bool, RuntimeError>;
 
     async fn compute_digest(&self, new_beacon: &Beacon) -> Result<String, RuntimeError>;
 
@@ -149,8 +155,33 @@ impl AggregatorRunnerTrait for AggregatorRunner {
         }
     }
 
-    async fn certificate_exist_for_beacon(&self, beacon: &Beacon) -> Result<bool, RuntimeError> {
-        info!("RUNNER: certificate_exist_for_beacon");
+    async fn is_certificate_chain_valid(&self) -> Result<bool, RuntimeError> {
+        info!("RUNNER: is_certificate_chain_valid");
+        let certificate_store = self.dependencies.certificate_store.clone();
+        let latest_certificates = certificate_store.get_list(1).await?;
+        let latest_certificate = latest_certificates.first();
+        if latest_certificate.is_none() {
+            return Ok(false);
+        }
+
+        let is_certificate_chain_valid = self
+            .dependencies
+            .certificate_verifier
+            .verify_certificate_chain(
+                latest_certificate.unwrap().to_owned(),
+                certificate_store.clone(),
+                &self.dependencies.genesis_verifier,
+            )
+            .await
+            .is_ok();
+        Ok(is_certificate_chain_valid)
+    }
+
+    async fn does_certificate_exist_for_beacon(
+        &self,
+        beacon: &Beacon,
+    ) -> Result<bool, RuntimeError> {
+        info!("RUNNER: does_certificate_exist_for_beacon");
         let certificate_exist = self
             .dependencies
             .certificate_store
@@ -502,7 +533,7 @@ pub mod tests {
     }
 
     #[tokio::test]
-    async fn test_certificate_exist_for_beacon() {
+    async fn test_does_certificate_exist_for_beacon() {
         let (dependencies, config) = initialize_dependencies().await;
         let certificate_store = dependencies.certificate_store.clone();
         let runner = AggregatorRunner::new(config, Arc::new(dependencies));
@@ -511,9 +542,15 @@ pub mod tests {
         let mut certificate = fake_data::certificate("certificate_hash".to_string());
         certificate.beacon = beacon.clone();
 
-        assert!(!runner.certificate_exist_for_beacon(&beacon).await.unwrap());
+        assert!(!runner
+            .does_certificate_exist_for_beacon(&beacon)
+            .await
+            .unwrap());
         certificate_store.save(certificate).await.unwrap();
-        assert!(runner.certificate_exist_for_beacon(&beacon).await.unwrap());
+        assert!(runner
+            .does_certificate_exist_for_beacon(&beacon)
+            .await
+            .unwrap());
     }
 
     #[tokio::test]

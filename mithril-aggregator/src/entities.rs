@@ -59,6 +59,9 @@ pub struct Config {
 
     /// Directory to store aggregator data (Certificates, Snapshots, Protocol Parameters, ...)
     pub data_stores_directory: PathBuf,
+
+    /// Genesis verification key
+    pub genesis_verification_key: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
