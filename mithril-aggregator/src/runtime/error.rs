@@ -4,6 +4,7 @@ use crate::{ProtocolError, ProtocolParametersStoreError, SnapshotError};
 
 use mithril_common::chain_observer::ChainObserverError;
 use mithril_common::digesters::{ImmutableDigesterError, ImmutableFileListingError};
+use mithril_common::entities::BeaconComparisonError;
 use mithril_common::entities::Epoch;
 use mithril_common::store::StakeStoreError;
 use mithril_common::BeaconProviderError;
@@ -51,6 +52,9 @@ pub enum RuntimeError {
 
     #[error("certificate chain gap error: {0} vs {1}")]
     CertificateChainEpochGap(Epoch, Epoch),
+
+    #[error("beacon comparison error: {0}")]
+    BeaconComparisonError(#[from] BeaconComparisonError),
 
     #[error("general error: {0}")]
     General(Box<dyn StdError + Sync + Send>),
