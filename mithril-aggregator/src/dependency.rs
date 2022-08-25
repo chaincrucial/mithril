@@ -11,7 +11,7 @@ use mithril_common::entities::{
 use mithril_common::store::{StakeStore, StakeStorer};
 use mithril_common::BeaconProvider;
 
-use crate::entities::*;
+use crate::configuration::*;
 use crate::multi_signer::MultiSigner;
 use crate::snapshot_stores::SnapshotStore;
 use crate::snapshot_uploaders::SnapshotUploader;
@@ -70,7 +70,7 @@ pub type ProtocolGenesisVerifierWrapper = Arc<ProtocolGenesisVerifier>;
 
 /// DependencyManager handles the dependencies
 pub struct DependencyManager {
-    pub config: Config,
+    pub config: Configuration,
     pub snapshot_store: SnapshotStoreWrapper,
     pub snapshot_uploader: SnapshotUploaderWrapper,
     pub multi_signer: MultiSignerWrapper,
@@ -174,10 +174,10 @@ impl DependencyManager {
 #[cfg(test)]
 pub mod tests {
     use crate::{
-        AggregatorConfig, CertificatePendingStore, CertificateStore, Config, DependencyManager,
-        DumbSnapshotUploader, DumbSnapshotter, LocalSnapshotStore, MultiSignerImpl,
-        ProtocolParametersStore, SingleSignatureStore, SnapshotStoreType, SnapshotUploaderType,
-        VerificationKeyStore,
+        AggregatorConfig, CertificatePendingStore, CertificateStore, Configuration,
+        DependencyManager, DumbSnapshotUploader, DumbSnapshotter, LocalSnapshotStore,
+        MultiSignerImpl, ProtocolParametersStore, SingleSignatureStore, SnapshotStoreType,
+        SnapshotUploaderType, VerificationKeyStore,
     };
     use mithril_common::certificate_chain::MithrilCertificateVerifier;
     use mithril_common::crypto_helper::{key_encode_hex, ProtocolGenesisSigner};
@@ -195,7 +195,7 @@ pub mod tests {
         let genesis_signer = ProtocolGenesisSigner::create_deterministic_genesis_signer();
         let genesis_verifier = Arc::new(genesis_signer.create_genesis_verifier());
         let genesis_verification_key = genesis_verifier.to_verification_key();
-        let config: Config = Config {
+        let config = Configuration {
             cardano_cli_path: PathBuf::new(),
             cardano_node_socket_path: PathBuf::new(),
             network_magic: Some(42),

@@ -1,5 +1,7 @@
+mod command_args;
+mod configuration;
 mod dependency;
-mod entities;
+mod genesis_tools;
 mod http_server;
 mod multi_signer;
 mod runtime;
@@ -9,9 +11,10 @@ mod snapshotter;
 mod store;
 mod tools;
 
-pub use crate::entities::{Config, SnapshotStoreType, SnapshotUploaderType};
+pub use crate::configuration::{Configuration, SnapshotStoreType, SnapshotUploaderType};
 pub use crate::multi_signer::{MultiSigner, MultiSignerImpl, ProtocolError};
 pub use crate::snapshot_stores::{LocalSnapshotStore, RemoteSnapshotStore, SnapshotStore};
+pub use command_args::Args;
 pub use dependency::DependencyManager;
 pub use http_server::Server;
 pub use runtime::{AggregatorConfig, AggregatorRunner, AggregatorRunnerTrait, AggregatorRuntime};
