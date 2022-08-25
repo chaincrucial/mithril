@@ -33,7 +33,7 @@ pub enum AdapterError {
 
 /// Represent a way to store Key/Value pair data.
 #[async_trait]
-pub trait StoreAdapter: Sync + Send {
+pub trait StoreAdapter<'a>: Sync + Send {
     /// The key type
     type Key;
 
@@ -65,5 +65,7 @@ pub trait StoreAdapter: Sync + Send {
     async fn remove(&mut self, key: &Self::Key) -> Result<Option<Self::Record>, AdapterError>;
 
     /// Get an iterator over the stored values, from the latest to the oldest.
-    async fn get_iter(&self) -> Result<Box<dyn Iterator<Item = Self::Record> + '_>, AdapterError>;
+    async fn get_iter<'iter: 'a>(
+        &self,
+    ) -> Result<Box<dyn Iterator<Item = Self::Record> + 'a>, AdapterError>;
 }

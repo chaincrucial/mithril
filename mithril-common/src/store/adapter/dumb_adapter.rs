@@ -24,7 +24,7 @@ impl<K, R> Default for DumbStoreAdapter<K, R> {
 }
 
 #[async_trait]
-impl<K, R> StoreAdapter for DumbStoreAdapter<K, R>
+impl<K, R, 'a> StoreAdapter<'a> for DumbStoreAdapter<K, R>
 where
     R: Clone + Send + Sync,
     K: PartialEq + Clone + Send + Sync,
@@ -86,7 +86,9 @@ where
         }
     }
 
-    async fn get_iter(&self) -> Result<Box<dyn Iterator<Item = Self::Record> + '_>, AdapterError> {
+    async fn get_iter<'iter: 'a>(
+        &self,
+    ) -> Result<Box<dyn Iterator<Item = Self::Record> + 'a>, AdapterError> {
         let mut values = vec![];
         if let Some(value) = &self.last_value {
             values.push(value.clone());

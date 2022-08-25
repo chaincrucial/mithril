@@ -37,7 +37,7 @@ where
 }
 
 #[async_trait]
-impl<K, V> StoreAdapter for MemoryAdapter<K, V>
+impl<K, V, 'a> StoreAdapter<'a> for MemoryAdapter<K, V>
 where
     K: Hash + Eq + Send + Sync + Clone,
     V: Send + Sync + Clone,
@@ -94,7 +94,9 @@ where
         Ok(self.values.remove(key))
     }
 
-    async fn get_iter(&self) -> Result<Box<dyn Iterator<Item = Self::Record> + '_>, AdapterError> {
+    async fn get_iter<'iter: 'a>(
+        &self,
+    ) -> Result<Box<dyn Iterator<Item = Self::Record> + 'a>, AdapterError> {
         Ok(Box::new(
             self.index
                 .iter()

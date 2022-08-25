@@ -1,42 +1,41 @@
-use std::{collections::HashMap, marker::PhantomData, path::PathBuf};
+use std::{marker::PhantomData, path::PathBuf, sync::Arc};
 
 use async_trait::async_trait;
-use rusqlite::{types::FromSql, Connection, Row, ToSql};
+use rusqlite::{types::FromSql, Connection, Row, Statement, ToSql};
+use tokio::sync::Mutex;
 
 use super::{AdapterError, StoreAdapter};
 
 type Result<T> = std::result::Result<T, AdapterError>;
 
 /// Store adapter for SQLite3
-struct SQLiteAdapter<K, V> {
-    file: PathBuf,
+struct SQLiteAdapter<'a, K, V> {
     structure: Box<dyn SqlTableDescription + Sync + Send>,
-    key: PhantomData<K>,
-    value: PhantomData<V>,
+    connection: Arc<Mutex<Connection>>,
+    key: &'a PhantomData<K>,
+    value: &'a PhantomData<V>,
 }
 
-impl<K, V> SQLiteAdapter<K, V> {
+impl<'a, K, V> SQLiteAdapter<'a, K, V> {
     /// Create a new SQLiteAdapter instance.
-    pub fn new(file: PathBuf, structure: Box<dyn SqlTableDescription + Sync + Send>) -> Self {
-        Self {
-            file,
+    pub fn new(
+        file: PathBuf,
+        structure: Box<dyn SqlTableDescription + Sync + Send>,
+    ) -> Result<Self> {
+        let connection =
+            Connection::open(file).map_err(|e| AdapterError::InitializationError(e.into()))?;
+
+        Ok(Self {
             structure,
-            key: PhantomData,
-            value: PhantomData,
-        }
-    }
-
-    /// Open a new connection to the database backend. If the file does not exist, it will be created.
-    fn init_connection(&self) -> Result<Connection> {
-        let connection = Connection::open(self.file.clone())
-            .map_err(|e| AdapterError::InitializationError(e.into()))?;
-
-        Ok(connection)
+            connection: Arc::new(Mutex::new(connection)),
+            key: &PhantomData,
+            value: &PhantomData,
+        })
     }
 }
 
 #[async_trait]
-impl<K, V> StoreAdapter for SQLiteAdapter<K, V>
+impl<K, V, 'a> StoreAdapter<'a> for SQLiteAdapter<'a, K, V>
 where
     K: Send + Sync + ToSql + FromSql,
     V: Send + Sync + ToSql + FromSql + Clone,
@@ -45,7 +44,7 @@ where
     type Record = V;
 
     async fn store_record(&mut self, key: &Self::Key, record: &Self::Record) -> Result<()> {
-        let connection = self.init_connection()?;
+        let connection = self.connection.lock().await;
         let sql = format!(
             "insert into {} ({}, {}) values (?1, ?2)",
             self.structure.get_table_name(),
@@ -59,7 +58,7 @@ where
     }
 
     async fn get_record(&self, key: &Self::Key) -> Result<Option<Self::Record>> {
-        let connection = self.init_connection()?;
+        let connection = self.connection.lock().await;
         let sql = format!(
             "select {} from {} where {} = ?1",
             self.structure.get_record_field(),
@@ -83,7 +82,19 @@ where
     }
 
     async fn record_exists(&self, key: &Self::Key) -> Result<bool> {
-        todo!()
+        let connection = self.connection.lock().await;
+        let sql = format!(
+            "select exists(select 1 from {} where {} = ?1)",
+            self.structure.get_table_name(),
+            self.structure.get_key_field()
+        );
+        connection
+            .query_row(
+                &sql,
+                [key],
+                |row| Ok(row.get::<usize, u64>(0).unwrap() == 1),
+            )
+            .map_err(|e| AdapterError::QueryError(e.into()))
     }
 
     async fn get_last_n_records(&self, how_many: usize) -> Result<Vec<(Self::Key, Self::Record)>> {
@@ -94,10 +105,53 @@ where
         todo!()
     }
 
-    async fn get_iter(&self) -> Result<Box<dyn Iterator<Item = Self::Record> + '_>> {
-        todo!()
+    async fn get_iter<'iter: 'a>(&self) -> Result<Box<dyn Iterator<Item = Self::Record> + 'a>> {
+        let connection = self.connection.lock().await;
+        let sql = format!(
+            "select {} from {} order by {} desc",
+            self.structure.get_record_field(),
+            self.structure.get_table_name(),
+            self.structure.get_created_at_field()
+        );
+        let mut statement = connection
+            .prepare(&sql)
+            .map_err(|e| AdapterError::OpeningStreamError(e.into()))?;
+        let map = statement
+            .query_map([], Box::new(|row: &Row| row.get(0)))
+            .map_err(|e| AdapterError::QueryError(e.into()))?
+            .map(|row| row.iter().next().cloned().unwrap());
+        let iterator: SQLiteResultIterator<'iter, Self::Record> =
+            SQLiteResultIterator::spawn(Box::new(map), statement);
+
+        Ok(Box::new(iterator))
     }
 }
+
+struct SQLiteResultIterator<'a, V> {
+    iterator: Box<dyn Iterator<Item = V> + 'a>,
+    statement: Statement<'a>,
+}
+
+impl<'a, V> SQLiteResultIterator<'a, V>
+where
+    V: FromSql + Clone,
+{
+    pub fn spawn(iterator: Box<dyn Iterator<Item = V> + 'a>, statement: Statement<'a>) -> Self {
+        Self {
+            iterator,
+            statement,
+        }
+    }
+}
+
+impl<'a, V> Iterator for SQLiteResultIterator<'a, V> {
+    type Item = V;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iterator.next()
+    }
+}
+
 /// SqlProjection allow structures to be stored and fetched from a SQL database.
 trait SqlTableDescription {
     /// Return the table name for queries.
@@ -192,7 +246,7 @@ mod tests {
             )
             .unwrap();
 
-        let adapter = SQLiteAdapter::new(filepath, Box::new(TestSqlStructure::new()));
+        let adapter = SQLiteAdapter::new(filepath, Box::new(TestSqlStructure::new())).unwrap();
 
         adapter
     }
@@ -251,5 +305,45 @@ mod tests {
             adapter.get_record(&2).await.unwrap()
         );
         assert_eq!(None, adapter.get_record(&4).await.unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_record_exists() {
+        let test_name = "test_record_exists";
+        let mut adapter = init_db(test_name);
+        adapter
+            .store_record(&1, "one".to_string().borrow())
+            .await
+            .unwrap();
+        adapter
+            .store_record(&2, "two".to_string().borrow())
+            .await
+            .unwrap();
+        assert!(adapter.record_exists(&1).await.unwrap());
+        assert!(adapter.record_exists(&2).await.unwrap());
+        assert!(!adapter.record_exists(&3).await.unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_get_iter() {
+        let test_name = "test_get_iter";
+        let mut adapter = init_db(test_name);
+        adapter
+            .store_record(&1, "one".to_string().borrow())
+            .await
+            .unwrap();
+        adapter
+            .store_record(&2, "two".to_string().borrow())
+            .await
+            .unwrap();
+        let iterator = adapter.get_iter().await.unwrap();
+
+        for (idx, record) in iterator.enumerate() {
+            match idx {
+                0 => assert_eq!("one".to_string(), record),
+                1 => assert_eq!("two".to_string(), record),
+                v => panic!("unexpected result indice {}", v),
+            }
+        }
     }
 }

@@ -131,7 +131,7 @@ where
 }
 
 #[async_trait]
-impl<K, V> StoreAdapter for JsonFileStoreAdapter<K, V>
+impl<K, V, 'a> StoreAdapter<'a> for JsonFileStoreAdapter<K, V>
 where
     K: Hash + PartialEq + Serialize + DeserializeOwned + Sync + Send,
     V: Serialize + DeserializeOwned + Sync + Send,
@@ -204,7 +204,9 @@ where
         }
     }
 
-    async fn get_iter(&self) -> Result<Box<dyn Iterator<Item = Self::Record> + '_>, AdapterError> {
+    async fn get_iter<'iter: 'a>(
+        &self,
+    ) -> Result<Box<dyn Iterator<Item = Self::Record> + 'a>, AdapterError> {
         let hashes = self.get_hash_iter()?;
         Ok(Box::new(hashes.map(|hash| {
             let filepath = self.dirpath.join(format!("{}.json", hash));

@@ -6,7 +6,7 @@ use crate::entities::{Epoch, StakeDistribution};
 
 use super::adapter::{AdapterError, StoreAdapter};
 
-type Adapter = Box<dyn StoreAdapter<Key = Epoch, Record = StakeDistribution>>;
+type Adapter<'a> = Box<dyn StoreAdapter<'a, Key = Epoch, Record = StakeDistribution>>;
 
 /// [StakeStorer] related errors.
 #[derive(Debug, Error)]
@@ -38,13 +38,13 @@ pub trait StakeStorer {
 }
 
 /// A [StakeStorer] that use a [StoreAdapter] to store data.
-pub struct StakeStore {
-    adapter: RwLock<Adapter>,
+pub struct StakeStore<'a> {
+    adapter: RwLock<Adapter<'a>>,
 }
 
-impl StakeStore {
+impl<'a> StakeStore<'a> {
     /// StakeStore factory
-    pub fn new(adapter: Adapter) -> Self {
+    pub fn new(adapter: Adapter<'a>) -> Self {
         Self {
             adapter: RwLock::new(adapter),
         }
@@ -52,7 +52,7 @@ impl StakeStore {
 }
 
 #[async_trait]
-impl StakeStorer for StakeStore {
+impl<'a> StakeStorer for StakeStore<'a> {
     async fn save_stakes(
         &self,
         epoch: Epoch,
@@ -86,7 +86,7 @@ mod tests {
     use super::super::adapter::MemoryAdapter;
     use super::*;
 
-    fn init_store(nb_epoch: u64, signers_per_epoch: u64) -> StakeStore {
+    fn init_store<'a>(nb_epoch: u64, signers_per_epoch: u64) -> StakeStore<'a> {
         let mut values: Vec<(Epoch, StakeDistribution)> = Vec::new();
 
         for epoch in 1..=nb_epoch {

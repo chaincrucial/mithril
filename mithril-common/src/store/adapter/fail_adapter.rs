@@ -25,7 +25,7 @@ impl<K, R> Default for FailStoreAdapter<K, R> {
 }
 
 #[async_trait]
-impl<K, R> StoreAdapter for FailStoreAdapter<K, R>
+impl<K, R, 'a> StoreAdapter<'a> for FailStoreAdapter<K, R>
 where
     R: Clone + Send + Sync,
     K: PartialEq + Clone + Send + Sync,
@@ -70,7 +70,9 @@ where
         ))
     }
 
-    async fn get_iter(&self) -> Result<Box<dyn Iterator<Item = Self::Record> + '_>, AdapterError> {
+    async fn get_iter<'iter: 'a>(
+        &self,
+    ) -> Result<Box<dyn Iterator<Item = Self::Record> + 'a>, AdapterError> {
         Err(AdapterError::GeneralError(
             "Fail adapter always fails".to_string(),
         ))
