@@ -2,6 +2,7 @@ use crate::snapshot_stores::SnapshotStoreError;
 use crate::store::StoreError;
 use crate::{ProtocolError, ProtocolParametersStoreError, SnapshotError};
 
+use mithril_common::certificate_chain::CertificateVerifierError;
 use mithril_common::chain_observer::ChainObserverError;
 use mithril_common::digesters::{ImmutableDigesterError, ImmutableFileListingError};
 use mithril_common::entities::BeaconComparisonError;
@@ -49,6 +50,9 @@ pub enum RuntimeError {
 
     #[error("beacon provider error: {0}")]
     BeaconProvider(#[from] BeaconProviderError),
+
+    #[error("certificate verifier error: {0}")]
+    CertificateVerifier(#[from] CertificateVerifierError),
 
     #[error("certificate chain gap error: {0} vs {1}")]
     CertificateChainEpochGap(Epoch, Epoch),
