@@ -196,6 +196,13 @@ impl Runner for SignerRunner {
             .get_current_stake_distribution()
             .await?
             .ok_or_else(|| RuntimeError::NoValueError("current_stake_distribution".to_string()))?;
+
+        debug!(
+            "update_stake_distribution";
+            "epoch" => ?epoch,
+            "stakes" => #?stake_distribution,
+        );
+
         self.services
             .stake_store
             .save_stakes(epoch.offset_to_recording_epoch()?, stake_distribution)
@@ -263,6 +270,13 @@ impl Runner for SignerRunner {
             .get_stakes(epoch)
             .await?
             .ok_or_else(|| RuntimeError::NoValueError(format!("stakes at epoch {}", epoch)))?;
+
+        debug!(
+            "associate_signers_with_stake";
+            "epoch" => ?epoch,
+            "stakes" => #?stakes,
+        );
+
         let mut signers_with_stake = vec![];
 
         for signer in signers {

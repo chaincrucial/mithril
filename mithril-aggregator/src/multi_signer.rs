@@ -478,6 +478,13 @@ impl MultiSigner for MultiSignerImpl {
             .epoch
             .offset_by(SIGNER_EPOCH_RECORDING_OFFSET)?;
         let stakes = HashMap::from_iter(stakes.iter().cloned());
+
+        debug!(
+            "update_stake_distribution";
+            "epoch" => ?epoch,
+            "stakes" => #?stakes,
+        );
+
         self.stake_store.save_stakes(epoch, stakes).await?;
 
         Ok(())

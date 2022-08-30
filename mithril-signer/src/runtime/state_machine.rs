@@ -240,6 +240,17 @@ impl StateMachine {
             .associate_signers_with_stake(next_retrieval_epoch, &pending_certificate.next_signers)
             .await?;
 
+        debug!(
+            "signers_with_stake";
+            "retrieval_epoch" => ?retrieval_epoch,
+            "signers" => #?signers,
+        );
+        debug!(
+            "next_signers_with_stake";
+            "next_retrieval_epoch" => ?next_retrieval_epoch,
+            "next_signers" => #?next_signers,
+        );
+
         let message = self
             .runner
             .compute_message(current_beacon, &next_signers)
