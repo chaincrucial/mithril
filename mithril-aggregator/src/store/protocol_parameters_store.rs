@@ -15,7 +15,7 @@ pub enum ProtocolParametersStoreError {
     AdapterError(#[from] AdapterError),
 }
 
-/// Trait for mocjing [ProtocolParameterStore].
+/// Trait for mocking [ProtocolParameterStore].
 #[async_trait]
 pub trait ProtocolParametersStorer {
     /// Save the given [ProtocolParameterStore] for the given [Epoch].
