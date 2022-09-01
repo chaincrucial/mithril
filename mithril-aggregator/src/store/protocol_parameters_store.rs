@@ -7,7 +7,7 @@ use mithril_common::store::adapter::{AdapterError, StoreAdapter};
 
 type Adapter = Box<dyn StoreAdapter<Key = Epoch, Record = ProtocolParameters>>;
 
-/// Error type for [ProtocolParameterStore].
+/// Error type for ProtocolParameterStore.
 #[derive(Debug, Error)]
 pub enum ProtocolParametersStoreError {
     /// Adapter error.
@@ -15,17 +15,17 @@ pub enum ProtocolParametersStoreError {
     AdapterError(#[from] AdapterError),
 }
 
-/// Trait for mocking [ProtocolParameterStore].
+/// Trait for mocking ProtocolParameterStore.
 #[async_trait]
 pub trait ProtocolParametersStorer {
-    /// Save the given [ProtocolParameterStore] for the given [Epoch].
+    /// Save the given ProtocolParameterStore for the given [Epoch].
     async fn save_protocol_parameters(
         &self,
         epoch: Epoch,
         protocol_parameters: ProtocolParameters,
     ) -> Result<Option<ProtocolParameters>, ProtocolParametersStoreError>;
 
-    /// Get the saved [ProtocolParameterStore] for the given [Epoch] if any.
+    /// Get the saved ProtocolParameterStore for the given [Epoch] if any.
     async fn get_protocol_parameters(
         &self,
         epoch: Epoch,
@@ -37,7 +37,7 @@ pub struct ProtocolParametersStore {
 }
 
 impl ProtocolParametersStore {
-    /// Create an instance of [ProtocolParameterStore].
+    /// Create an instance of ProtocolParameterStore.
     pub fn new(adapter: Adapter) -> Self {
         Self {
             adapter: RwLock::new(adapter),
