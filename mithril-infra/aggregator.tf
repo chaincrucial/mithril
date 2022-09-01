@@ -54,7 +54,7 @@ resource "null_resource" "mithril-aggregator" {
 
   provisioner "remote-exec" {
     inline = [
-      "NETWORK=testnet NETWORK_MAGIC=1097911063 IMAGE_ID=${var.image_id} GOOGLE_APPLICATION_CREDENTIALS_JSON='${var.google_application_credentials_json}' CURRENT_UID=$(id -u) DOCKER_GID=$(getent group docker | cut -d: -f3)  docker-compose -f /home/curry/docker-compose.yaml --profile all up -d"
+      "NETWORK=preview NETWORK_MAGIC=2 IMAGE_ID=${var.image_id} GOOGLE_APPLICATION_CREDENTIALS_JSON='${var.google_application_credentials_json}' CURRENT_UID=$(id -u) DOCKER_GID=$(getent group docker | cut -d: -f3)  docker-compose -f /home/curry/docker-compose.yaml --profile all up -d"
     ]
   }
 }
