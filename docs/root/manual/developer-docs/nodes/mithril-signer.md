@@ -120,13 +120,13 @@ Run in release with default configuration
 Run in release with a specific mode
 
 ```bash
-./mithril-signer -r testnet
+./mithril-signer -r preview
 ```
 
 Run in release with a custom configuration via env vars
 
 ```bash
-NETWORK=testnet AGGREGATOR_ENDPOINT=https://aggregator.api.mithril.network/aggregator ./mithril-signer
+NETWORK=preview AGGREGATOR_ENDPOINT=https://aggregator.api.mithril.network/aggregator ./mithril-signer
 ```
 
 :::tip
@@ -158,7 +158,7 @@ make docker-run
 
 The configuration parameters are set either:
 
-* In a configuration file (depending on the `--run-mode` parameter). If runtime mode is `testnet` the file is located in `./conf/testnet.json`.
+* In a configuration file (depending on the `--run-mode` parameter). If runtime mode is `preview` the file is located in `./conf/preview.json`.
 * The value can be overriden by an environment variable whose name is the parameter name uppercased.
 
 Here is a list of the available parameters:
@@ -168,8 +168,8 @@ Here is a list of the available parameters:
 | `verbose` | `--verbose` | `-v` | `VERBOSE` | Verbosity level | - | Parsed from number of occurences: `-v` for `Warning`, `-vv` for `Info`, `-vvv` for `Debug` and `-vvvv` for `Trace` | :heavy_check_mark: |
 | `run_mode` | `--run-mode` | `-r` | `RUN_MODE` | Runtime mode | `dev` | - | :heavy_check_mark: |
 | `db_directory` | `--db-directory` | - | `DB_DIRECTORY` | Directory to snapshot from the **Cardano Node** | `/db` | - | :heavy_check_mark: |
-| `network` | - | - | `NETWORK` | Cardano network | - | `testnet` or `mainnet` or `devnet` | :heavy_check_mark: |
-`network_magic` | - | - | `NETWORK_MAGIC` | Cardano Network Magic number (for `testnet` and `devnet`) | - | `1097911063` or `42` | - |
+| `network` | - | - | `NETWORK` | Cardano network | - | `preview` or `mainnet` or `devnet` | :heavy_check_mark: |
+`network_magic` | - | - | `NETWORK_MAGIC` | Cardano Network Magic number (for `preview` and `devnet`) | - | `2` or `42` | - |
 | `party_id` | - | - | `PARTY_ID` | Party Id of the signer, usually the `PoolId` of the SPO | - | `pool1pxaqe80sqpde7902er5kf6v0c7y0sv6d5g676766v2h829fvs3x` | :heavy_check_mark: |
 | `run_interval` | - | - | `RUN_INTERVAL` | Interval between two runtime cycles in ms | - | `60000` | :heavy_check_mark: |
 | `aggregator_endpoint` | - | - | `AGGREGATOR_ENDPOINT` | Aggregator node endpoint | - | `https://aggregator.api.mithril.network/aggregator` | :heavy_check_mark: |

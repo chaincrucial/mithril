@@ -86,13 +86,13 @@ If you want to dig deeper, you can get access to several level of logs from the 
 
 :::
 
-## Bootstrap a Cardano node from a testnet Mithril snapshot
+## Bootstrap a Cardano node from a preview Mithril snapshot
 
 ### Step 1: Prepare some useful variables
 
 ```bash
 # Cardano network
-NETWORK=testnet
+NETWORK=preview
 
 # Aggregator API endpoint URL
 AGGREGATOR_ENDPOINT=https://aggregator.api.mithril.network/aggregator
@@ -116,15 +116,15 @@ You will see a list of snapshots
 +---------+------------------------------------------------------------------+------------+-----------+--------------------------------+
 | Network | Digest                                                           | Size       | Locations | Created                        |
 +---------+------------------------------------------------------------------+------------+-----------+--------------------------------+
-| testnet | cd587611b5ff2445c714bef083d9455ed3e42e9304ae0ad38b02432d03f9b068 | 5273560121 |         1 | 2022-07-10T11:19:18.042554390Z |
+| preview | cd587611b5ff2445c714bef083d9455ed3e42e9304ae0ad38b02432d03f9b068 | 5273560121 |         1 | 2022-07-10T11:19:18.042554390Z |
 +---------+------------------------------------------------------------------+------------+-----------+--------------------------------+
-| testnet | 22267a8399cbd1731420f7241c91bec66b3126c971d53b1cdf4db0c016320df4 | 5267582819 |         1 | 2022-07-10T05:44:59.048360039Z |
+| preview | 22267a8399cbd1731420f7241c91bec66b3126c971d53b1cdf4db0c016320df4 | 5267582819 |         1 | 2022-07-10T05:44:59.048360039Z |
 +---------+------------------------------------------------------------------+------------+-----------+--------------------------------+
-| testnet | c14792945b3880fa9f8880348f885c707b8e4d13cdb035b9a735c15f88ea45db | 5265335799 |         1 | 2022-07-10T00:03:43.656860711Z |
+| preview | c14792945b3880fa9f8880348f885c707b8e4d13cdb035b9a735c15f88ea45db | 5265335799 |         1 | 2022-07-10T00:03:43.656860711Z |
 +---------+------------------------------------------------------------------+------------+-----------+--------------------------------+
-| testnet | 0344faf7ebcd7cbf606288bfc8e7c11f992bd4f28f3ac159942b487a0217f485 | 5265577167 |         1 | 2022-07-09T18:31:16.604292173Z |
+| preview | 0344faf7ebcd7cbf606288bfc8e7c11f992bd4f28f3ac159942b487a0217f485 | 5265577167 |         1 | 2022-07-09T18:31:16.604292173Z |
 +---------+------------------------------------------------------------------+------------+-----------+--------------------------------+
-| testnet | fc42ef98e233717a7180502dc51aab1ca64d5bd6d6e9d72b4096ac1f7e45a129 | 5262797245 |         1 | 2022-07-09T12:45:20.306735843Z |
+| preview | fc42ef98e233717a7180502dc51aab1ca64d5bd6d6e9d72b4096ac1f7e45a129 | 5262797245 |         1 | 2022-07-09T12:45:20.306735843Z |
 +---------+------------------------------------------------------------------+------------+-----------+--------------------------------+
 ```
 
@@ -142,13 +142,13 @@ You will see more information about a snapshot
 +------------+--------------------------------------------------------------------------------------------------------------------------------+
 | Info       | Value                                                                                                                          |
 +------------+--------------------------------------------------------------------------------------------------------------------------------+
-| Network    | testnet                                                                                                                        |
+| Network    | preview                                                                                                                        |
 +------------+--------------------------------------------------------------------------------------------------------------------------------+
 | Digest     | cd587611b5ff2445c714bef083d9455ed3e42e9304ae0ad38b02432d03f9b068                                                               |
 +------------+--------------------------------------------------------------------------------------------------------------------------------+
 | Size       | 5273560121                                                                                                                     |
 +------------+--------------------------------------------------------------------------------------------------------------------------------+
-| Location 1 | https://storage.googleapis.com/cardano-testnet/testnet.cd587611b5ff2445c714bef083d9455ed3e42e9304ae0ad38b02432d03f9b068.tar.gz |
+| Location 1 | https://storage.googleapis.com/cardano-preview/preview.cd587611b5ff2445c714bef083d9455ed3e42e9304ae0ad38b02432d03f9b068.tar.gz |
 +------------+--------------------------------------------------------------------------------------------------------------------------------+
 | Created    | 2022-07-10T11:19:18.042554390Z                                                                                                 |
 ```
@@ -165,8 +165,8 @@ You will see that the selected snapshot archive has been downloaded locally
 
 ```bash
 Download success cd587611b5ff2445c714bef083d9455ed3e42e9304ae0ad38b02432d03f9b068 #1
-from https://storage.googleapis.com/cardano-testnet/testnet.cd587611b5ff2445c714bef083d9455ed3e42e9304ae0ad38b02432d03f9b068.tar.gz
-to /home/mithril/data/testnet/cd587611b5ff2445c714bef083d9455ed3e42e9304ae0ad38b02432d03f9b068/snapshot.archive.tar.gz
+from https://storage.googleapis.com/cardano-preview/preview.cd587611b5ff2445c714bef083d9455ed3e42e9304ae0ad38b02432d03f9b068.tar.gz
+to /home/mithril/data/preview/cd587611b5ff2445c714bef083d9455ed3e42e9304ae0ad38b02432d03f9b068/snapshot.archive.tar.gz
 ```
 
 ### Step 5: Restore Selected Snapshot
@@ -182,11 +182,11 @@ You will see that the snapshot archive is unpacked and that the associcated cert
 ```bash
 Unpacking snapshot...
 Unpack success cd587611b5ff2445c714bef083d9455ed3e42e9304ae0ad38b02432d03f9b068
-to /home/mithril/data/testnet/cd587611b5ff2445c714bef083d9455ed3e42e9304ae0ad38b02432d03f9b068/db
+to /home/mithril/data/preview/cd587611b5ff2445c714bef083d9455ed3e42e9304ae0ad38b02432d03f9b068/db
 
 Restore a Cardano Node with:
 
-docker run -v cardano-node-ipc:/ipc -v cardano-node-data:/data --mount type=bind,source="/home/mithril/data/testnet/cd587611b5ff2445c714bef083d9455ed3e42e9304ae0ad38b02432d03f9b068/db",target=/data/db/ -e NETWORK=testnet inputoutput/cardano-node
+docker run -v cardano-node-ipc:/ipc -v cardano-node-data:/data --mount type=bind,source="/home/mithril/data/preview/cd587611b5ff2445c714bef083d9455ed3e42e9304ae0ad38b02432d03f9b068/db",target=/data/db/ -e NETWORK=preview inputoutput/cardano-node
 ```
 
 ### Step 6: Launch a Cardano Node From Restored Snapshot
@@ -194,7 +194,7 @@ docker run -v cardano-node-ipc:/ipc -v cardano-node-data:/data --mount type=bind
 Launch an empty Cardano node and make it live in minutes!
 
 ```bash
-docker run -v cardano-node-ipc:/ipc -v cardano-node-data:/data --mount type=bind,source="$(pwd)/data/testnet/$SNAPSHOT_DIGEST/db",target=/data/db/ -e NETWORK=testnet inputoutput/cardano-node
+docker run -v cardano-node-ipc:/ipc -v cardano-node-data:/data --mount type=bind,source="$(pwd)/data/preview/$SNAPSHOT_DIGEST/db",target=/data/db/ -e NETWORK=preview inputoutput/cardano-node
 ```
 
 You will see the node start by validating the files injested from the snapshot archive
@@ -354,11 +354,11 @@ NodeToClientV_13 HardForkNodeToClientEnabled HardForkSpecificNodeToClientVersion
 [c995d1df:cardano.node.DiffusionInitializationTracer:Info:349] [2022-07-10 13:53:39.87 UTC] ListeningLocalSocket (LocalAddress "/ipc/node.socket") (FileDescriptor 26)
 [c995d1df:cardano.node.DiffusionInitializationTracer:Info:349] [2022-07-10 13:53:39.87 UTC] LocalSocketUp (LocalAddress "/ipc/node.socket") (FileDescriptor 26)
 [c995d1df:cardano.node.DiffusionInitializationTracer:Info:349] [2022-07-10 13:53:39.87 UTC] RunLocalServer (LocalAddress "/ipc/node.socket")
-[c995d1df:cardano.node.DnsSubscription:Warning:345] [2022-07-10 13:53:39.91 UTC] Domain: "relays-new.cardano-testnet.iohkdev.io" Unsupported remote target address [2a05:d014:e00:a200:0:1:0:1]:3001
-[c995d1df:cardano.node.DnsSubscription:Notice:358] [2022-07-10 13:53:39.91 UTC] Domain: "relays-new.cardano-testnet.iohkdev.io" Connection Attempt Start, destination 3.131.32.242:3001
-[c995d1df:cardano.node.DnsSubscription:Warning:345] [2022-07-10 13:53:39.94 UTC] Domain: "relays-new.cardano-testnet.iohkdev.io" Unsupported remote target address [2a05:d01c:321:2101:0:1:0:2]:3001
-[c995d1df:cardano.node.DnsSubscription:Notice:359] [2022-07-10 13:53:39.94 UTC] Domain: "relays-new.cardano-testnet.iohkdev.io" Connection Attempt Start, destination 13.41.9.54:3001
-[c995d1df:cardano.node.DnsSubscription:Notice:359] [2022-07-10 13:53:39.95 UTC] Domain: "relays-new.cardano-testnet.iohkdev.io" Connection Attempt End, destination 13.41.9.54:3001 outcome: ConnectSuccessLast
+[c995d1df:cardano.node.DnsSubscription:Warning:345] [2022-07-10 13:53:39.91 UTC] Domain: "relays-new.cardano-preview.iohkdev.io" Unsupported remote target address [2a05:d014:e00:a200:0:1:0:1]:3001
+[c995d1df:cardano.node.DnsSubscription:Notice:358] [2022-07-10 13:53:39.91 UTC] Domain: "relays-new.cardano-preview.iohkdev.io" Connection Attempt Start, destination 3.131.32.242:3001
+[c995d1df:cardano.node.DnsSubscription:Warning:345] [2022-07-10 13:53:39.94 UTC] Domain: "relays-new.cardano-preview.iohkdev.io" Unsupported remote target address [2a05:d01c:321:2101:0:1:0:2]:3001
+[c995d1df:cardano.node.DnsSubscription:Notice:359] [2022-07-10 13:53:39.94 UTC] Domain: "relays-new.cardano-preview.iohkdev.io" Connection Attempt Start, destination 13.41.9.54:3001
+[c995d1df:cardano.node.DnsSubscription:Notice:359] [2022-07-10 13:53:39.95 UTC] Domain: "relays-new.cardano-preview.iohkdev.io" Connection Attempt End, destination 13.41.9.54:3001 outcome: ConnectSuccessLast
 [c995d1df:cardano.node.ErrorPolicy:Notice:343] [2022-07-10 13:53:39.95 UTC] IP 3.131.32.242:3001 ErrorPolicySuspendConsumer (Just (ConnectionExceptionTrace (SubscriberError {seType = SubscriberParallelConnectionCancelled, seMessage = "Parallel connection cancelled", seStack = []}))) 1s
 ```
 

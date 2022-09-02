@@ -56,10 +56,10 @@ make build
 ./mithril-aggregator
 
 # Run in a specific mode
-./mithril-aggregator -r testnet
+./mithril-aggregator -r preview
 
 # Run with custom configuration with env vars
-RUN_INTERVAL=60000 NETWORK=testnet URL_SNAPSHOT_MANIFEST=https://storage.googleapis.com/cardano-testnet/snapshots.json ./mithril-aggregator
+RUN_INTERVAL=60000 NETWORK=preview URL_SNAPSHOT_MANIFEST=https://storage.googleapis.com/cardano-preview/snapshots.json ./mithril-aggregator
 ```
 
 ## Build and run Docker container

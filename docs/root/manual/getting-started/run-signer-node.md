@@ -6,7 +6,7 @@ sidebar_position: 2
 
 :::info
 
-In this guide, you will learn how to setup a **Mithril Signer** on top of a **Cardano SPO Node** for the `testnet`.
+In this guide, you will learn how to setup a **Mithril Signer** on top of a **Cardano SPO Node** for the `preview`.
 
 :::
 
@@ -27,7 +27,7 @@ For more information about the **Mithril Protocol**, please refer to the [About 
 * Operating a **Cardano Node** as a **Stake Pool**:
   * The `Pool Id` in a `BECH32` format such as `pool1frevxe70aqw2ce58c0muyesnahl88nfjjsp25h85jwakzgd2g2l`
 
-* Access to the file system of a `relay` **Cardano Node** running on the `testnet`:
+* Access to the file system of a `relay` **Cardano Node** running on the `preview`:
   * Read rights on the `Database` folder (`--database-path` setting of the **Cardano Node**)
   * Read/Write rights on the `Inter Process Communication` file (usually `CARDANO_NODE_SOCKET_PATH` env var used to launch the **Cardano Node**)
 
@@ -140,7 +140,7 @@ First create an env file that will be used by the service
 ```bash
 sudo cat > /opt/mithril/mithril-signer.env << EOF
 PARTY_ID=YOUR_POOL_ID_BECH32
-NETWORK=testnet
+NETWORK=preview
 NETWORK_MAGIC=1097911063
 AGGREGATOR_ENDPOINT=https://aggregator.api.mithril.network/aggregator
 RUN_INTERVAL=60000 DB_DIRECTORY=/cardano/db

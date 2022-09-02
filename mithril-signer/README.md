@@ -55,10 +55,10 @@ make build
 ./mithril-signer
 
 # Run in a specific mode
-./mithril-signer -r testnet
+./mithril-signer -r preview
 
 # Run with custom configuration with env vars
-NETWORK=testnet AGGREGATOR_ENDPOINT=https://aggregator.api.mithril.network/aggregator ./mithril-signer
+NETWORK=preview AGGREGATOR_ENDPOINT=https://aggregator.api.mithril.network/aggregator ./mithril-signer
 ```
 
 ## Build and run Docker container

@@ -47,9 +47,9 @@ For more information about the **Mithril Protocol**, please refer to the [About 
 
 In the [**Getting Started**](/doc/category/getting-started) guide, you will find tutorials for:
 
-* :new: As someone who needs to [Bootstrap a Cardano node](./getting-started/bootstrap-cardano-node.md) on the `testnet`.
+* :new: As someone who needs to [Bootstrap a Cardano node](./getting-started/bootstrap-cardano-node.md) on the `preview`.
 
-* As an SPO who wants to [Run a Mithril Signer node](./getting-started/run-signer-node.md) on the `testnet`.
+* As an SPO who wants to [Run a Mithril Signer node](./getting-started/run-signer-node.md) on the `preview`.
 
 * As someone who wants to [Run a Private Mithril network](./getting-started/run-mithril-devnet.md) on the `devnet`.
 

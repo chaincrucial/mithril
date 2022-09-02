@@ -136,13 +136,13 @@ Run in release with default configuration
 Run in release with a specific mode
 
 ```bash
-./mithril-aggregator -r testnet
+./mithril-aggregator -r preview
 ```
 
 Run in release with a custom configuration via env vars
 
 ```bash
-RUN_INTERVAL=60000 NETWORK=testnet ./mithril-aggregator
+RUN_INTERVAL=60000 NETWORK=preview ./mithril-aggregator
 ```
 
 :::tip
@@ -174,7 +174,7 @@ make docker-run
 
 The configuration parameters are set either:
 
-* In a configuration file (depending on the `--run-mode` parameter). If runtime mode is `testnet` the file is located in `./conf/testnet.json`.
+* In a configuration file (depending on the `--run-mode` parameter). If runtime mode is `preview` the file is located in `./conf/preview.json`.
 * The value can be overriden by an environment variable whose name is the parameter name uppercased.
 
 Here is a list of the available parameters:
@@ -187,8 +187,8 @@ Here is a list of the available parameters:
 | `run_mode` | `--run-mode` | `-r` | `RUN_MODE` | Runtime mode | `dev` | - | :heavy_check_mark: |
 | `db_directory` | `--db-directory` | - | `DB_DIRECTORY` | Directory to snapshot from the **Cardano Node** | `/db` | - | :heavy_check_mark: |
 | `snapshot_directory` | `--snapshot-directory` | - | `SNAPSHOT_DIRECTORY` | Directory to store local snapshots of the **Cardano Node** | `.` | - | :heavy_check_mark: |
-| `network` | - | - | `NETWORK` | Cardano network | - | `testnet` or `mainnet` or `devnet` | :heavy_check_mark: |
-`network_magic` | - | - | `NETWORK_MAGIC` | Cardano Network Magic number (for `testnet` and `devnet`) | - | `1097911063` or `42` | - |
+| `network` | - | - | `NETWORK` | Cardano network | - | `preview` or `mainnet` or `devnet` | :heavy_check_mark: |
+`network_magic` | - | - | `NETWORK_MAGIC` | Cardano Network Magic number (for `preview` and `devnet`) | - | `1097911063` or `42` | - |
 | `protocol_parameters` | - | - | `PROTOCOL_PARAMETERS__K`, `PROTOCOL_PARAMETERS__M`, and `PROTOCOL_PARAMETERS__PHI_F` | Mithril Protocol Parameters | - | `{ k: 5, m: 100, phi_f: 0.65 }` | :heavy_check_mark: |
 | `snapshot_store_type` | - | - | `SNAPSHOT_STORE_TYPE` | Type of snapshot store to use | - | `gcp` or `local` | :heavy_check_mark: |
 | `snapshot_uploader_type` | - | - | `SNAPSHOT_UPLOADER_TYPE` | Type of snapshot uploader to use | - | `gcp` or `local` | :heavy_check_mark: |
