@@ -15,5 +15,11 @@ jobs:
         ref: 2327.0-pre
         
     - name: Build the Docker image
-      run: docker build . --file mithril-signer/Dockerfile --tag chaincrucial/mithril-signer:${{ env.build_tag }}
+      run: docker build . --file mithril-signer/Dockerfile \
+        --tag ghcr.io/chaincrucial/mithril-signer:${{ env.build_tag }} \
+        --tag ghcr.io/chaincrucial/mithril-signer:latest
+        
+    - name: Push the Docker image
+      run: docker push ghcr.io/chaincrucial/mithril-signer:${{ env.build_tag }}
+        docker push ghcr.io/chaincrucial/mithril-signer:latest
       
