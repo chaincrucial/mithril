@@ -1,0 +1,19 @@
+name: Docker Image CI
+
+on:
+  workflow_dispatch:
+  
+env:
+  build_tag: 2327.0-pre
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        ref: 2327.0-pre
+        
+    - name: Build the Docker image
+      run: docker build . --file mithril-signer/Dockerfile --tag chaincrucial/mithril-signer:${{ env.build_tag }}
+      
