@@ -23,11 +23,12 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Build and tag the Docker image
-      run: docker build . --file mithril-signer/Dockerfile \
-        --tag ghcr.io/chaincrucial/mithril-signer:${{ env.build_tag }}
+      run: |
+        docker build . --file mithril-signer/Dockerfile --tag ghcr.io/chaincrucial/mithril-signer:${{ env.build_tag }}
         docker tag ghcr.io/chaincrucial/mithril-signer:${{ env.build_tag }} ghcr.io/chaincrucial/mithril-signer:latest
         
     - name: Push the Docker image
-      run: docker push ghcr.io/chaincrucial/mithril-signer:${{ env.build_tag }}
+      run: |
+        docker push ghcr.io/chaincrucial/mithril-signer:${{ env.build_tag }}
         docker push ghcr.io/chaincrucial/mithril-signer:latest
       
