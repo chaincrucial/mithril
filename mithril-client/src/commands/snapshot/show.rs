@@ -14,7 +14,8 @@ pub struct SnapshotShowCommand {
     #[clap(long)]
     json: bool,
 
-    /// Snapshot digest
+    /// Snapshot digest.
+    /// If `latest` is specified as digest, it will returns the latest snapshot digest
     digest: String,
 }
 
