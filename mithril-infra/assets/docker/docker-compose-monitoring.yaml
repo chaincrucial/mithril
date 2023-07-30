@@ -4,6 +4,7 @@ services:
   prometheus:
     image: prom/prometheus:v2.45.0
     container_name: prometheus
+    user: ${CURRENT_UID}
     profiles:
       - tools
       - monitoring
@@ -13,6 +14,7 @@ services:
     command:
       - --config.file=/etc/prometheus/prometheus.yml
     volumes:
+      - ../data/monitoring/prometheus:/prometheus
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./prometheus/cardano.json:/etc/prometheus/cardano.json:ro
     logging:
@@ -24,8 +26,8 @@ services:
       - 'traefik.http.routers.prometheus.rule=Host(`${PROMETHEUS_HOST}`)'
       - 'traefik.http.routers.prometheus.tls=true'
       - 'traefik.http.routers.prometheus.tls.certresolver=lets-encrypt'
-      - "traefik.http.routers.prometheus.middlewares=test-auth"
-      - "traefik.http.middlewares.test-auth.basicauth.users=${AUTH_USER_PASSWORD}"
+      - "traefik.http.routers.prometheus.middlewares=prometheus-auth"
+      - "traefik.http.middlewares.prometheus-auth.basicauth.users=${PROMETHEUS_AUTH_USER_PASSWORD}"
 
   node-exporter:
     image: prom/node-exporter:latest
@@ -52,6 +54,7 @@ services:
   loki:
     image: grafana/loki:2.8.0
     container_name: loki
+    user: ${CURRENT_UID}
     profiles:
       - tools
       - monitoring
@@ -59,12 +62,20 @@ services:
     ports:
       - "3100:3100"
     volumes:
+      - ../data/monitoring/loki:/tmp/loki
       - ./loki/local-config.yaml:/etc/loki/local-config.yaml
     command: -config.file=/etc/loki/local-config.yaml
     logging:
       driver: "${LOGGING_DRIVER}"
       options:
         tag: "{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}"
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.loki.rule=Host(`${LOKI_HOST}`)'
+      - 'traefik.http.routers.loki.tls=true'
+      - 'traefik.http.routers.loki.tls.certresolver=lets-encrypt'
+      - "traefik.http.routers.loki.middlewares=loki-auth"
+      - "traefik.http.middlewares.loki-auth.basicauth.users=${LOKI_AUTH_USER_PASSWORD}"
 
   promtail:
     image: grafana/promtail:2.8.0
@@ -86,5 +97,5 @@ services:
 
 networks:
   default:
-    external:
-      name: mithril_network
+    name: mithril_network
+    external: true

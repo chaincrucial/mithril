@@ -41,6 +41,12 @@ NUM_POOL_NODES=$3
 SLOT_LENGTH=$4
 EPOCH_LENGTH=$5
 
+if [[ "$SKIP_CARDANO_BIN_DOWNLOAD" = "true" ]]; then
+  SKIP_CARDANO_BIN_DOWNLOAD=true
+else
+  SKIP_CARDANO_BIN_DOWNLOAD=false
+fi
+
 SUPPLY=100000000000
 NETWORK_MAGIC=42
 SECURITY_PARAM=2
@@ -48,7 +54,7 @@ SECURITY_PARAM=2
 NODE_PORT_START=3000
 NODE_ADDR_PREFIX="172.16.238"
 NODE_ADDR_INCREMENT=10
-CARDANO_BINARY_URL="https://github.com/input-output-hk/cardano-node/releases/download/8.1.1/cardano-node-8.1.1-linux.tar.gz"
+CARDANO_BINARY_URL="https://github.com/input-output-hk/cardano-node/releases/download/8.1.2/cardano-node-8.1.2-linux.tar.gz"
 ALONZO_GENESIS_URL="https://book.world.dev.cardano.org/environments/private/alonzo-genesis.json"
 CONWAY_GENESIS_URL="https://book.world.dev.cardano.org/environments/private/conway-genesis.json"
 
@@ -105,10 +111,12 @@ if ! mkdir -p "${ROOT}"; then
   exit
 fi
 
-# download cardano-cli & cardano-node
-curl -sL ${CARDANO_BINARY_URL} --output cardano-bin.tar.gz
-tar xzf cardano-bin.tar.gz ./cardano-cli ./cardano-node 
-rm -f cardano-bin.tar.gz
+# download cardano-cli & cardano-node if enabled (default: yes)
+if [ "$SKIP_CARDANO_BIN_DOWNLOAD" = false ]; then
+  curl -sL ${CARDANO_BINARY_URL} --output cardano-bin.tar.gz
+  tar xzf cardano-bin.tar.gz ./cardano-cli ./cardano-node 
+  rm -f cardano-bin.tar.gz
+fi
 
 # and copy cardano-cli & cardano-node
 cp cardano-cli ${ROOT}/cardano-cli
@@ -731,11 +739,19 @@ cat >> query-mithril.sh <<EOF
 AGGREGATOR_API_ENDPOINT="http://0.0.0.0:8080/aggregator"
 
 echo ">> Query pending certificate"
-curl -s \${AGGREGATOR_API_ENDPOINT}/certificate-pending | jq .
+curl -sL \${AGGREGATOR_API_ENDPOINT}/certificate-pending | jq .
 echo
 
-echo ">> Query snapshots"
-curl -s \${AGGREGATOR_API_ENDPOINT}/snapshots | jq '.[:2]'
+echo ">> Query latest certificates"
+curl -sL \${AGGREGATOR_API_ENDPOINT}/certificates | jq '.[:2]'
+echo
+
+echo ">> Query latest mithril stake distributions"
+curl -sL \${AGGREGATOR_API_ENDPOINT}/artifact/mithril-stake-distributions | jq '.[:2]'
+echo
+
+echo ">> Query latest snapshots"
+curl -sL \${AGGREGATOR_API_ENDPOINT}/artifact/snapshots | jq '.[:2]'
 echo
 
 EOF
@@ -746,7 +762,7 @@ cat >> query-cardano.sh <<EOF
 echo ">> Query chain tip"
 CARDANO_NODE_SOCKET_PATH=node-bft1/ipc/node.sock ./cardano-cli query tip \\
     --cardano-mode \\
-    --testnet-magic ${NETWORK_MAGIC}
+    --testnet-magic ${NETWORK_MAGIC} | jq .
 
 echo
 echo ">> Query whole utxo"
@@ -765,7 +781,7 @@ echo
 echo ">> Query stake distribution"
 CARDANO_NODE_SOCKET_PATH=node-bft1/ipc/node.sock ./cardano-cli query stake-snapshot --all-stake-pools \\
     --cardano-mode \\
-    --testnet-magic ${NETWORK_MAGIC}
+    --testnet-magic ${NETWORK_MAGIC} | jq .
 echo
 
 EOF
@@ -1272,7 +1288,7 @@ if [ -z "\${MITHRIL_IMAGE_ID}" ]; then
   cd mithril-signer && make docker-build > /dev/null && cd ..
   cd $PWD
 fi
-docker-compose rm -f
+
 if [ -z "\${MITHRIL_IMAGE_ID}" ]; then 
   export MITHRIL_AGGREGATOR_IMAGE="mithril/mithril-aggregator"
   export MITHRIL_CLIENT_IMAGE="mithril/mithril-client"
@@ -1282,7 +1298,8 @@ else
   export MITHRIL_CLIENT_IMAGE="ghcr.io/input-output-hk/mithril-client:\${MITHRIL_IMAGE_ID}"
   export MITHRIL_SIGNER_IMAGE="ghcr.io/input-output-hk/mithril-signer:\${MITHRIL_IMAGE_ID}"
 fi
-docker-compose -f docker-compose.yaml --profile mithril up --remove-orphans --force-recreate -d --no-build
+docker compose rm -f
+docker compose -f docker-compose.yaml --profile mithril up --remove-orphans --force-recreate -d --no-build
 
 echo ">> List of Mithril signers"
     echo --------,--------------------------------------------------------,----------------------------------- | column -t -s,                                                 
@@ -1312,7 +1329,7 @@ do
 done
 
 echo ">> Bootstrap the Genesis certificate"
-docker-compose -f docker-compose.yaml --profile mithril-genesis run mithril-aggregator-genesis
+docker compose -f docker-compose.yaml --profile mithril-genesis run mithril-aggregator-genesis
 
 EOF
 chmod u+x start-mithril.sh
@@ -1333,32 +1350,17 @@ else
   export MITHRIL_CLIENT_IMAGE="ghcr.io/input-output-hk/mithril-client:\${MITHRIL_IMAGE_ID}"
   export MITHRIL_SIGNER_IMAGE="ghcr.io/input-output-hk/mithril-signer:\${MITHRIL_IMAGE_ID}"
 fi
-docker-compose -f docker-compose.yaml --profile mithril down
+docker compose -f docker-compose.yaml --profile mithril down
 EOF
 chmod u+x stop.sh
 
 cat >> log-mithril.sh <<EOF
 #!/usr/bin/env bash
 
-SEPARATOR="====================================================================="
-
-if [ -z "\${MITHRIL_IMAGE_ID}" ]; then 
-  export MITHRIL_AGGREGATOR_IMAGE="mithril/mithril-aggregator"
-  export MITHRIL_CLIENT_IMAGE="mithril/mithril-client"
-  export MITHRIL_SIGNER_IMAGE="mithril/mithril-signer"
-else
-  export MITHRIL_AGGREGATOR_IMAGE="ghcr.io/input-output-hk/mithril-aggregator:\${MITHRIL_IMAGE_ID}"
-  export MITHRIL_CLIENT_IMAGE="ghcr.io/input-output-hk/mithril-client:\${MITHRIL_IMAGE_ID}"
-  export MITHRIL_SIGNER_IMAGE="ghcr.io/input-output-hk/mithril-signer:\${MITHRIL_IMAGE_ID}"
-fi
+SEPARATOR="---------------------------------------------------------------------"
 
 # Mithril nodes logs
-echo \${SEPARATOR}
-echo '-- ' docker-compose logs --tail="\${LINES}"
-echo \${SEPARATOR}
-docker-compose logs --tail="\${LINES}"
-echo 
-echo \${SEPARATOR}
+docker ps --format='{{.Names}}' | grep "mithril" | sort -n | xargs -i  sh -c 'echo '\${SEPARATOR}' && echo docker logs -n '\${LINES}' {} && echo '\${SEPARATOR}' && docker logs -n '\${LINES}' {} && echo '\${SEPARATOR}' && echo'
 
 EOF
 chmod u+x log-mithril.sh
@@ -1366,7 +1368,7 @@ chmod u+x log-mithril.sh
 cat >> log-cardano.sh <<EOF
 #!/usr/bin/env bash
 
-SEPARATOR="====================================================================="
+SEPARATOR="---------------------------------------------------------------------"
 
 # Cardano nodes logs
 find . -type f -print | grep "node.log" | sort -n | xargs -i  sh -c 'echo '\${SEPARATOR}' && echo tail -n '\${LINES}' {} && echo '\${SEPARATOR}' && tail -n '\${LINES}' {} && echo '\${SEPARATOR}' && echo'

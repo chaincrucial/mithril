@@ -1,4 +1,5 @@
-use std::{error::Error, fs::File, io::prelude::*, io::Write, path::Path, sync::Arc};
+use std::{fs::File, io::prelude::*, io::Write, path::Path, sync::Arc};
+use tokio::sync::RwLock;
 
 use mithril_common::{
     certificate_chain::{CertificateGenesisProducer, CertificateVerifier},
@@ -7,13 +8,11 @@ use mithril_common::{
         ProtocolGenesisSigner, ProtocolGenesisVerifier,
     },
     entities::{Beacon, ProtocolParameters},
-    BeaconProvider,
+    BeaconProvider, StdResult,
 };
-use tokio::sync::RwLock;
 
-use crate::{CertificateStore, MultiSigner, ProtocolParametersStore, ProtocolParametersStorer};
-
-type GenesisToolsResult<R> = Result<R, Box<dyn Error>>;
+use crate::database::provider::CertificateRepository;
+use crate::{MultiSigner, ProtocolParametersStorer};
 
 pub struct GenesisToolsDependency {
     /// Multisigner service.
@@ -29,10 +28,10 @@ pub struct GenesisToolsDependency {
     pub certificate_verifier: Arc<dyn CertificateVerifier>,
 
     /// Protocol parameter store.
-    pub protocol_parameters_store: Arc<ProtocolParametersStore>,
+    pub protocol_parameters_store: Arc<dyn ProtocolParametersStorer>,
 
     /// Certificate store.
-    pub certificate_store: Arc<CertificateStore>,
+    pub certificate_repository: Arc<CertificateRepository>,
 }
 
 pub struct GenesisTools {
@@ -41,7 +40,7 @@ pub struct GenesisTools {
     genesis_avk: ProtocolAggregateVerificationKey,
     genesis_verifier: Arc<ProtocolGenesisVerifier>,
     certificate_verifier: Arc<dyn CertificateVerifier>,
-    certificate_store: Arc<CertificateStore>,
+    certificate_repository: Arc<CertificateRepository>,
 }
 
 impl GenesisTools {
@@ -51,7 +50,7 @@ impl GenesisTools {
         genesis_avk: ProtocolAggregateVerificationKey,
         genesis_verifier: Arc<ProtocolGenesisVerifier>,
         certificate_verifier: Arc<dyn CertificateVerifier>,
-        certificate_store: Arc<CertificateStore>,
+        certificate_repository: Arc<CertificateRepository>,
     ) -> Self {
         Self {
             protocol_parameters,
@@ -59,13 +58,11 @@ impl GenesisTools {
             genesis_avk,
             genesis_verifier,
             certificate_verifier,
-            certificate_store,
+            certificate_repository,
         }
     }
 
-    pub async fn from_dependencies(
-        dependencies: GenesisToolsDependency,
-    ) -> GenesisToolsResult<Self> {
+    pub async fn from_dependencies(dependencies: GenesisToolsDependency) -> StdResult<Self> {
         let mut multi_signer = dependencies.multi_signer.write().await;
         let beacon_provider = dependencies.beacon_provider.clone();
         let beacon = beacon_provider.get_current_beacon().await?;
@@ -73,7 +70,7 @@ impl GenesisTools {
 
         let genesis_verifier = dependencies.genesis_verifier.clone();
         let certificate_verifier = dependencies.certificate_verifier.clone();
-        let certificate_store = dependencies.certificate_store.clone();
+        let certificate_repository = dependencies.certificate_repository.clone();
         let protocol_parameters_store = dependencies.protocol_parameters_store.clone();
 
         let protocol_parameters = protocol_parameters_store
@@ -83,8 +80,7 @@ impl GenesisTools {
 
         let genesis_avk = multi_signer
             .compute_next_stake_distribution_aggregate_verification_key()
-            .await?
-            .ok_or_else(|| "Genesis AVK computation failed".to_string())?;
+            .await?;
         let genesis_avk: ProtocolAggregateVerificationKey = key_decode_hex(&genesis_avk)?;
 
         Ok(Self::new(
@@ -93,12 +89,12 @@ impl GenesisTools {
             genesis_avk,
             genesis_verifier,
             certificate_verifier,
-            certificate_store,
+            certificate_repository,
         ))
     }
 
     /// Export AVK of the genesis stake distribution to a payload file
-    pub fn export_payload_to_sign(&self, target_path: &Path) -> GenesisToolsResult<()> {
+    pub fn export_payload_to_sign(&self, target_path: &Path) -> StdResult<()> {
         let mut target_file = File::create(target_path)?;
         let protocol_message =
             CertificateGenesisProducer::create_genesis_protocol_message(&self.genesis_avk)?;
@@ -107,10 +103,7 @@ impl GenesisTools {
     }
 
     /// Import signature of the AVK of the genesis stake distribution from a file
-    pub async fn import_payload_signature(
-        &self,
-        signed_payload_path: &Path,
-    ) -> GenesisToolsResult<()> {
+    pub async fn import_payload_signature(&self, signed_payload_path: &Path) -> StdResult<()> {
         let mut signed_payload_file = File::open(signed_payload_path).unwrap();
         let mut signed_payload_buffer = Vec::new();
         signed_payload_file.read_to_end(&mut signed_payload_buffer)?;
@@ -124,7 +117,7 @@ impl GenesisTools {
     pub async fn bootstrap_test_genesis_certificate(
         &self,
         genesis_signer: ProtocolGenesisSigner,
-    ) -> GenesisToolsResult<()> {
+    ) -> StdResult<()> {
         let genesis_producer = CertificateGenesisProducer::new(Some(Arc::new(genesis_signer)));
         let genesis_protocol_message =
             CertificateGenesisProducer::create_genesis_protocol_message(&self.genesis_avk)?;
@@ -134,10 +127,36 @@ impl GenesisTools {
             .await
     }
 
+    /// Sign the genesis certificate
+    pub async fn sign_genesis_certificate(
+        to_sign_payload_path: &Path,
+        target_signed_payload_path: &Path,
+        genesis_secret_key_path: &Path,
+    ) -> StdResult<()> {
+        let mut genesis_secret_key_file = File::open(genesis_secret_key_path).unwrap();
+        let mut genesis_secret_key_serialized = String::new();
+        genesis_secret_key_file.read_to_string(&mut genesis_secret_key_serialized)?;
+
+        let genesis_secret_key = key_decode_hex(&genesis_secret_key_serialized.trim().to_string())?;
+        let genesis_signer = ProtocolGenesisSigner::from_secret_key(genesis_secret_key);
+
+        let mut to_sign_payload_file = File::open(to_sign_payload_path).unwrap();
+        let mut to_sign_payload_buffer = Vec::new();
+        to_sign_payload_file.read_to_end(&mut to_sign_payload_buffer)?;
+
+        let genesis_signature = genesis_signer.sign(&to_sign_payload_buffer);
+        let signed_payload = genesis_signature.to_bytes();
+
+        let mut target_signed_payload_file = File::create(target_signed_payload_path)?;
+        target_signed_payload_file.write_all(&signed_payload)?;
+
+        Ok(())
+    }
+
     async fn create_and_save_genesis_certificate(
         &self,
         genesis_signature: ProtocolGenesisSignature,
-    ) -> GenesisToolsResult<()> {
+    ) -> StdResult<()> {
         let genesis_certificate = CertificateGenesisProducer::create_genesis_certificate(
             self.protocol_parameters.clone(),
             self.beacon.clone(),
@@ -147,27 +166,32 @@ impl GenesisTools {
         self.certificate_verifier
             .verify_genesis_certificate(&genesis_certificate, &self.genesis_verifier)
             .await?;
-        self.certificate_store.save(genesis_certificate).await?;
+        self.certificate_repository
+            .create_certificate(genesis_certificate)
+            .await?;
         Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
-    use std::path::PathBuf;
-
+    use crate::database::provider::apply_all_migrations_to_db;
     use mithril_common::{
         certificate_chain::MithrilCertificateVerifier,
         crypto_helper::{ProtocolClerk, ProtocolGenesisSigner},
-        store::adapter::MemoryAdapter,
         test_utils::{fake_data, MithrilFixtureBuilder},
     };
+    use sqlite::Connection;
+    use std::{fs, path::PathBuf};
+    use tokio::sync::Mutex;
 
     use super::*;
 
     fn get_temp_dir(dir_name: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join("mithril_test").join(dir_name);
+        let dir = std::env::temp_dir()
+            .join("mithril_test")
+            .join("genesis")
+            .join(dir_name);
 
         if dir.exists() {
             let _ = fs::remove_dir_all(&dir);
@@ -185,32 +209,19 @@ mod tests {
         clerk.compute_avk()
     }
 
-    fn sign_avk_payload(
-        payload_path: &Path,
-        target_path: &Path,
-        genesis_signer: &ProtocolGenesisSigner,
-    ) -> GenesisToolsResult<()> {
-        let mut payload_file = File::open(payload_path).unwrap();
-        let mut payload_buffer = Vec::new();
-        payload_file.read_to_end(&mut payload_buffer)?;
-        let payload_signed = genesis_signer.sign(&payload_buffer).to_bytes();
-        let mut target_file = File::create(target_path)?;
-        target_file.write_all(&payload_signed)?;
-        Ok(())
-    }
-
     fn build_tools(
         genesis_signer: &ProtocolGenesisSigner,
     ) -> (
         GenesisTools,
-        Arc<CertificateStore>,
+        Arc<CertificateRepository>,
         Arc<ProtocolGenesisVerifier>,
         Arc<dyn CertificateVerifier>,
     ) {
+        let connection = Connection::open(":memory:").unwrap();
+        apply_all_migrations_to_db(&connection).unwrap();
+        let certificate_store =
+            Arc::new(CertificateRepository::new(Arc::new(Mutex::new(connection))));
         let certificate_verifier = Arc::new(MithrilCertificateVerifier::new(slog_scope::logger()));
-        let certificate_store = Arc::new(CertificateStore::new(Box::new(
-            MemoryAdapter::new(None).unwrap(),
-        )));
         let genesis_avk = create_fake_genesis_avk();
         let genesis_verifier = Arc::new(genesis_signer.create_genesis_verifier());
         let genesis_tools = GenesisTools::new(
@@ -233,30 +244,39 @@ mod tests {
     #[tokio::test]
     async fn export_sign_then_import_genesis_payload() {
         let test_dir = get_temp_dir("export_payload_to_sign");
-        let path = test_dir.join("payload.txt");
+        let payload_path = test_dir.join("payload.txt");
         let signed_payload_path = test_dir.join("payload-signed.txt");
+        let genesis_secret_key_path = test_dir.join("genesis.sk");
         let genesis_signer = ProtocolGenesisSigner::create_deterministic_genesis_signer();
         let (genesis_tools, certificate_store, genesis_verifier, certificate_verifier) =
             build_tools(&genesis_signer);
 
+        genesis_signer
+            .export_to_file(&genesis_secret_key_path)
+            .expect("exporting the secret key should not fail");
         genesis_tools
-            .export_payload_to_sign(&path)
+            .export_payload_to_sign(&payload_path)
             .expect("export_payload_to_sign should not fail");
-        sign_avk_payload(&path, &signed_payload_path, &genesis_signer)
-            .expect("sign avk payload should not fail");
+        GenesisTools::sign_genesis_certificate(
+            &payload_path,
+            &signed_payload_path,
+            &genesis_secret_key_path,
+        )
+        .await
+        .expect("sign_genesis_certificate should not fail");
         genesis_tools
             .import_payload_signature(&signed_payload_path)
             .await
             .expect("import_payload_signature should not fail");
 
-        let last_certificates = certificate_store.get_list(10).await.unwrap();
+        let last_certificates = certificate_store.get_latest_certificates(10).await.unwrap();
 
         assert_eq!(1, last_certificates.len());
         certificate_verifier
             .verify_genesis_certificate(&last_certificates[0], &genesis_verifier)
             .await
             .expect(
-                "verify_genesis_certificate should successully validate the genesis certificate",
+                "verify_genesis_certificate should successfully validate the genesis certificate",
             );
     }
 
@@ -271,14 +291,14 @@ mod tests {
             .await
             .expect("bootstrap test genesis certificate should not fail");
 
-        let last_certificates = certificate_store.get_list(10).await.unwrap();
+        let last_certificates = certificate_store.get_latest_certificates(10).await.unwrap();
 
         assert_eq!(1, last_certificates.len());
         certificate_verifier
             .verify_genesis_certificate(&last_certificates[0], &genesis_verifier)
             .await
             .expect(
-                "verify_genesis_certificate should successully validate the genesis certificate",
+                "verify_genesis_certificate should successfully validate the genesis certificate",
             );
     }
 }

@@ -1,14 +1,24 @@
-use mithril_common::{entities::SingleSignatures, messages::RegisterSignatureMessage};
+use mithril_common::{
+    entities::SingleSignatures,
+    messages::{RegisterSignatureMessage, TryFromMessageAdapter},
+    StdResult,
+};
 
 pub struct FromRegisterSingleSignatureAdapter;
 
-impl FromRegisterSingleSignatureAdapter {
-    pub fn adapt(register_single_signature_message: RegisterSignatureMessage) -> SingleSignatures {
-        SingleSignatures {
+impl TryFromMessageAdapter<RegisterSignatureMessage, SingleSignatures>
+    for FromRegisterSingleSignatureAdapter
+{
+    fn try_adapt(
+        register_single_signature_message: RegisterSignatureMessage,
+    ) -> StdResult<SingleSignatures> {
+        let signatures = SingleSignatures {
             party_id: register_single_signature_message.party_id,
-            signature: register_single_signature_message.signature,
+            signature: register_single_signature_message.signature.try_into()?,
             won_indexes: register_single_signature_message.won_indexes,
-        }
+        };
+
+        Ok(signatures)
     }
 }
 
@@ -19,7 +29,7 @@ mod tests {
     #[test]
     fn test_simple_message() {
         let message = RegisterSignatureMessage::dummy();
-        let signatures = FromRegisterSingleSignatureAdapter::adapt(message);
+        let signatures = FromRegisterSingleSignatureAdapter::try_adapt(message).unwrap();
 
         assert_eq!("party_id".to_string(), signatures.party_id);
     }

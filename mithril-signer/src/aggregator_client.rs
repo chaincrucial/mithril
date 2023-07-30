@@ -9,7 +9,10 @@ use mithril_common::{
     entities::{
         CertificatePending, Epoch, EpochSettings, SignedEntityType, Signer, SingleSignatures,
     },
-    messages::{CertificatePendingMessage, EpochSettingsMessage},
+    messages::{
+        CertificatePendingMessage, EpochSettingsMessage, FromMessageAdapter, ToMessageAdapter,
+        TryFromMessageAdapter,
+    },
     MITHRIL_API_VERSION_HEADER, MITHRIL_SIGNER_VERSION_HEADER,
 };
 
@@ -202,7 +205,10 @@ impl AggregatorClient for AggregatorHTTPClient {
         match response {
             Ok(response) => match response.status() {
                 StatusCode::OK => match response.json::<CertificatePendingMessage>().await {
-                    Ok(message) => Ok(Some(FromPendingCertificateMessageAdapter::adapt(message))),
+                    Ok(message) => Ok(Some(
+                        FromPendingCertificateMessageAdapter::try_adapt(message)
+                            .map_err(|e| AggregatorClientError::JsonParseFailed(e.to_string()))?,
+                    )),
                     Err(err) => Err(AggregatorClientError::JsonParseFailed(err.to_string())),
                 },
                 StatusCode::PRECONDITION_FAILED => Err(self.handle_api_error(&response)),
@@ -225,7 +231,7 @@ impl AggregatorClient for AggregatorHTTPClient {
         debug!("Register signer");
         let url = format!("{}/register-signer", self.aggregator_endpoint);
         let register_signer_message =
-            ToRegisterSignerMessageAdapter::adapt(epoch, signer.to_owned());
+            ToRegisterSignerMessageAdapter::adapt((epoch, signer.to_owned()));
         let response = self
             .prepare_request_builder(self.prepare_http_client()?.post(url.clone()))
             .json(&register_signer_message)
@@ -256,10 +262,10 @@ impl AggregatorClient for AggregatorHTTPClient {
     ) -> Result<(), AggregatorClientError> {
         debug!("Register signatures");
         let url = format!("{}/register-signatures", self.aggregator_endpoint);
-        let register_single_signature_message = ToRegisterSignatureMessageAdapter::adapt(
+        let register_single_signature_message = ToRegisterSignatureMessageAdapter::adapt((
             signed_entity_type.to_owned(),
             signatures.to_owned(),
-        );
+        ));
         let response = self
             .prepare_request_builder(self.prepare_http_client()?.post(url.clone()))
             .json(&register_single_signature_message)
@@ -394,6 +400,7 @@ mod tests {
     use httpmock::prelude::*;
     use mithril_common::entities::{ClientError, Epoch};
     use mithril_common::era::{EraChecker, SupportedEra};
+    use mithril_common::messages::TryFromMessageAdapter;
     use serde_json::json;
     use std::path::{Path, PathBuf};
 
@@ -507,7 +514,7 @@ mod tests {
         let pending_certificate = certificate_handler.retrieve_pending_certificate().await;
         pending_certificate.as_ref().expect("unexpected error");
         assert_eq!(
-            FromPendingCertificateMessageAdapter::adapt(pending_certificate_expected),
+            FromPendingCertificateMessageAdapter::try_adapt(pending_certificate_expected).unwrap(),
             pending_certificate.unwrap().unwrap()
         );
     }

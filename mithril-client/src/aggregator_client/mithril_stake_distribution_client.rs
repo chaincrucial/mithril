@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
 use mithril_common::{
-    entities::MithrilStakeDistribution,
-    messages::{MessageAdapter, MithrilStakeDistributionMessage},
+    entities::{MithrilStakeDistribution, SignedEntity},
     messages::{MithrilStakeDistributionListItemMessage, MithrilStakeDistributionListMessage},
+    messages::{MithrilStakeDistributionMessage, TryFromMessageAdapter},
     StdResult,
 };
 
@@ -32,16 +32,19 @@ impl MithrilStakeDistributionClient {
     }
 
     /// Download the given stake distribution. If it cannot be found, a None is returned.
-    pub async fn get(&self, hash: &str) -> StdResult<Option<MithrilStakeDistribution>> {
+    pub async fn get(
+        &self,
+        hash: &str,
+    ) -> StdResult<Option<SignedEntity<MithrilStakeDistribution>>> {
         let url = format!("artifact/mithril-stake-distribution/{hash}");
 
         match self.http_client.get_content(&url).await {
             Ok(content) => {
                 let message: MithrilStakeDistributionMessage = serde_json::from_str(&content)?;
-                let stake_distribution: MithrilStakeDistribution =
-                    FromMithrilStakeDistributionMessageAdapter::adapt(message);
+                let stake_distribution_entity =
+                    FromMithrilStakeDistributionMessageAdapter::try_adapt(message)?;
 
-                Ok(Some(stake_distribution))
+                Ok(Some(stake_distribution_entity))
             }
             Err(e) if matches!(e, AggregatorHTTPClientError::RemoteServerLogical(_)) => Ok(None),
             Err(e) => Err(e.into()),
@@ -52,7 +55,9 @@ impl MithrilStakeDistributionClient {
 #[cfg(test)]
 mod tests {
     use chrono::{DateTime, Utc};
-    use mithril_common::{entities::Epoch, test_utils::fake_data};
+    use mithril_common::{
+        entities::Epoch, messages::SignerWithStakeMessagePart, test_utils::fake_data,
+    };
 
     use crate::aggregator_client::MockAggregatorHTTPClient;
 
@@ -64,11 +69,17 @@ mod tests {
                 epoch: Epoch(1),
                 hash: "hash-123".to_string(),
                 certificate_hash: "cert-hash-123".to_string(),
+                created_at: DateTime::parse_from_rfc3339("2023-01-19T13:43:05.618857482Z")
+                    .unwrap()
+                    .with_timezone(&Utc),
             },
             MithrilStakeDistributionListItemMessage {
                 epoch: Epoch(2),
                 hash: "hash-456".to_string(),
                 certificate_hash: "cert-hash-456".to_string(),
+                created_at: DateTime::parse_from_rfc3339("2023-01-19T13:43:05.618857482Z")
+                    .unwrap()
+                    .with_timezone(&Utc),
             },
         ]
     }
@@ -94,7 +105,9 @@ mod tests {
         let message = MithrilStakeDistributionMessage {
             certificate_hash: "certificate-hash-123".to_string(),
             epoch: Epoch(1),
-            signers_with_stake: fake_data::signers_with_stakes(2),
+            signers_with_stake: SignerWithStakeMessagePart::from_signers(
+                fake_data::signers_with_stakes(2),
+            ),
             hash: "hash".to_string(),
             created_at: DateTime::<Utc>::default(),
             protocol_parameters: fake_data::protocol_parameters(),
@@ -103,13 +116,16 @@ mod tests {
             .expect_get_content()
             .return_once(move |_| Ok(serde_json::to_string(&message).unwrap()));
         let client = MithrilStakeDistributionClient::new(Arc::new(http_client));
-        let stake_distribution = client
+        let stake_distribution_entity = client
             .get("hash")
             .await
             .unwrap()
             .expect("This test returns a stake distribution");
 
-        assert_eq!("hash".to_string(), stake_distribution.hash);
-        assert_eq!(2, stake_distribution.signers_with_stake.len(),);
+        assert_eq!("hash".to_string(), stake_distribution_entity.artifact.hash);
+        assert_eq!(
+            2,
+            stake_distribution_entity.artifact.signers_with_stake.len(),
+        );
     }
 }

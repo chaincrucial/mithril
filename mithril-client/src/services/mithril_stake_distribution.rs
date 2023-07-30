@@ -1,19 +1,18 @@
+use async_trait::async_trait;
 use std::{
     path::{Path, PathBuf},
     sync::Arc,
 };
-
-use async_trait::async_trait;
 use thiserror::Error;
 
 use mithril_common::{
     certificate_chain::CertificateVerifier,
     crypto_helper::{
-        key_decode_hex, key_encode_hex, ProtocolClerk, ProtocolGenesisVerifier,
-        ProtocolKeyRegistration,
+        key_decode_hex, key_encode_hex, ProtocolAggregateVerificationKey, ProtocolGenesisVerifier,
     },
     entities::{MithrilStakeDistribution, ProtocolMessagePartKey},
     messages::MithrilStakeDistributionListItemMessage,
+    protocol::SignerBuilder,
     StdError, StdResult,
 };
 
@@ -89,54 +88,16 @@ impl AppMithrilStakeDistributionService {
         }
     }
 
-    // This method is shamefully copied from the Aggregator's multisigner. This
-    // WILL be refactored in a hopefully clean API in Common lib.
-    // TODO: Create a structure to handle message verification.
-    async fn create_clerk(
+    async fn compute_avk_from_mithril_stake_distribution(
         &self,
         stake_distribution: &MithrilStakeDistribution,
-    ) -> StdResult<Option<ProtocolClerk>> {
-        let stakes: Vec<(String, u64)> = stake_distribution
-            .signers_with_stake
-            .iter()
-            .map(|signer| (signer.party_id.clone(), signer.stake))
-            .collect();
-        let mut key_registration = ProtocolKeyRegistration::init(&stakes);
-        let mut total_signers = 0;
+    ) -> StdResult<ProtocolAggregateVerificationKey> {
+        let signer_builder = SignerBuilder::new(
+            &stake_distribution.signers_with_stake,
+            &stake_distribution.protocol_parameters,
+        )?;
 
-        for signer in &stake_distribution.signers_with_stake {
-            let operational_certificate = match &signer.operational_certificate {
-                Some(operational_certificate) => key_decode_hex(operational_certificate)?,
-                _ => None,
-            };
-            let verification_key = key_decode_hex(&signer.verification_key)?;
-            let kes_signature = match &signer.verification_key_signature {
-                Some(verification_key_signature) => {
-                    Some(key_decode_hex(verification_key_signature)?)
-                }
-                _ => None,
-            };
-            let kes_period = signer.kes_period;
-            key_registration.register(
-                Some(signer.party_id.to_owned()),
-                operational_certificate,
-                kes_signature,
-                kes_period,
-                verification_key,
-            )?;
-            total_signers += 1;
-        }
-
-        match total_signers {
-            0 => Ok(None),
-            _ => {
-                let closed_registration = key_registration.close();
-                Ok(Some(ProtocolClerk::from_registration(
-                    &stake_distribution.protocol_parameters.clone().into(),
-                    &closed_registration,
-                )))
-            }
-        }
+        Ok(signer_builder.compute_aggregate_verification_key())
     }
 }
 
@@ -152,29 +113,24 @@ impl MithrilStakeDistributionService for AppMithrilStakeDistributionService {
         dirpath: &Path,
         genesis_verification_key: &str,
     ) -> StdResult<PathBuf> {
-        // 1 - retrieve stake distribution
-        let stake_distribution =
-            self.stake_distribution_client
-                .get(hash)
-                .await?
-                .ok_or_else(|| {
-                    MithrilStakeDistributionServiceError::CouldNotFindStakeDistribution(
-                        hash.to_owned(),
-                    )
-                })?;
+        let stake_distribution_entity = self
+            .stake_distribution_client
+            .get(hash)
+            .await?
+            .ok_or_else(|| {
+                MithrilStakeDistributionServiceError::CouldNotFindStakeDistribution(hash.to_owned())
+            })?;
 
-        // 2 retrieve certificate
         let certificate = self
             .certificate_client
-            .get(&stake_distribution.certificate_hash)
+            .get(&stake_distribution_entity.certificate_id)
             .await?
             .ok_or_else(|| {
                 MithrilStakeDistributionServiceError::CertificateNotFound(
-                    stake_distribution.certificate_hash.clone(),
+                    stake_distribution_entity.certificate_id.clone(),
                 )
             })?;
 
-        // 3 get and check genesis verification key
         let genesis_verification_key = key_decode_hex(&genesis_verification_key.to_string())
             .map_err(
                 |e| MithrilStakeDistributionServiceError::InvalidParameters {
@@ -192,18 +148,10 @@ impl MithrilStakeDistributionService for AppMithrilStakeDistributionService {
             )
             .await?;
 
-        // 4 Compute and check protocol message
-        let clerk = self
-            .create_clerk(&stake_distribution)
-            .await?
-            .ok_or_else(|| {
-                MithrilStakeDistributionServiceError::CouldNotVerifyStakeDistribution {
-                    hash: hash.to_owned(),
-                    certificate_hash: certificate.hash.clone(),
-                    context: "Cannot verify an empty stake distribution".to_string(),
-                }
-            })?;
-        let avk = key_encode_hex(clerk.compute_avk())?;
+        let avk = key_encode_hex(
+            self.compute_avk_from_mithril_stake_distribution(&stake_distribution_entity.artifact)
+                .await?,
+        )?;
         let mut protocol_message = certificate.protocol_message.clone();
         protocol_message
             .set_message_part(ProtocolMessagePartKey::NextAggregateVerificationKey, avk);
@@ -222,14 +170,16 @@ impl MithrilStakeDistributionService for AppMithrilStakeDistributionService {
             );
         }
 
-        // 5 save the JSON file
         if !dirpath.is_dir() {
             std::fs::create_dir_all(dirpath)?;
         }
         let filepath = PathBuf::new()
             .join(dirpath)
             .join(format!("mithril_stake_distribution-{hash}.json"));
-        std::fs::write(&filepath, serde_json::to_string(&stake_distribution)?)?;
+        std::fs::write(
+            &filepath,
+            serde_json::to_string(&stake_distribution_entity.artifact)?,
+        )?;
 
         Ok(filepath)
     }
@@ -244,7 +194,7 @@ mod tests {
         entities::{Epoch, SignerWithStake},
         messages::{
             CertificateMessage, MithrilStakeDistributionListMessage,
-            MithrilStakeDistributionMessage,
+            MithrilStakeDistributionMessage, SignerWithStakeMessagePart,
         },
         test_utils::{fake_data, MithrilFixtureBuilder},
     };
@@ -264,7 +214,9 @@ mod tests {
     ) -> MithrilStakeDistributionMessage {
         MithrilStakeDistributionMessage {
             epoch: Epoch(1),
-            signers_with_stake: signers_with_stake.to_owned(),
+            signers_with_stake: SignerWithStakeMessagePart::from_signers(
+                signers_with_stake.to_owned(),
+            ),
             hash: "hash-123".to_string(),
             certificate_hash: "certificate-hash-123".to_string(),
             created_at: DateTime::<Utc>::default(),

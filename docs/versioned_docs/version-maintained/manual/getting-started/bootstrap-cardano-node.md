@@ -1,124 +1,128 @@
 ---
-sidebar_position: 1
+sidebar_position: 2
 ---
 
 import NetworksMatrix from '../../networks-matrix.md';
 import CompiledBinaries from '../../compiled-binaries.md'
 
-# Bootstrap a Cardano Node
+# Bootstrap a Cardano node
 
 :::info
 
-Thanks to a **Mithril Client** connected to a **Mithril Aggregator**, you will restore a full Cardano node in less than 2 hours!
+With the **Mithril Client** connected to a **Mithril Aggregator**, you can restore a full Cardano node in less than two hours!
 
 :::
 
-:::note Mithril Networks
+:::note Mithril networks
 
 <NetworksMatrix />
 
 :::
 
-# Video demonstration
+## Video demonstration
 
-In this video you will see how fast the bootstrapping of a Cardano node with Mithril is compared to classical bootstrapping (benchmark done on mainnet with Daedalus wallet).
+In this video, you will witness the speed of bootstrapping a Cardano node with Mithril compared to classical bootstrapping. The benchmark was conducted on mainnet using the Daedalus wallet.
 
 <iframe style={{width: '100%', height: '480px'}} src="https://www.youtube.com/embed/5qjJNRgEzYo" title="Daedalus Bootstrap Benchmark on mainnet with/without Mithril" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen="true"></iframe>
 
 
 ## Pre-requisites
 
-* Install a [correctly configured](https://www.rust-lang.org/learn/get-started) Rust toolchain (latest stable version).
+Before proceeding with the installation, ensure that you have the following pre-requisites in place:
 
-* Install OpenSSL development libraries, for example on Ubuntu/Debian/Mint run `sudo apt install libssl-dev`
+1. **Install a [correctly configured](https://www.rust-lang.org/learn/get-started) Rust toolchain**: make sure you have the latest stable version of Rust installed
 
-* Install other requirements
+2. **Install OpenSSL development libraries**: On Ubuntu/Debian/Mint, run the following command to install the required OpenSSL development libraries:
+
+ ```
+sudo apt install libssl-dev
+ ```
+
+3. **Install other requirements**: Make sure you have all the additional dependencies and requirements specified for the project:
+   
 ```bash
 sudo apt-get install make build-essential m4 docker jq
 ```
 
-## Download source
+## Download the source file
 
-Download from GitHub (HTTPS)
+You can download the source file from GitHub (HTTPS):
 
 ```bash
 git clone https://github.com/input-output-hk/mithril.git
 ```
 
-Or (SSH)
+Or (SSH):
 
 ```bash
 git clone git@github.com:input-output-hk/mithril.git
 ```
 
-## Build Mithril Client binary
+## Build the Mithril Client binary
 
-Switch to build branch / tag
+To build the Mithril Client binary, switch to the desired branch/tag:
 
 ```bash
-# **YOUR_BUILD_BRANCH_OR_TAG** depends on the Mithril network you target, 
-# please refer to the **Build From** column of the above **Mithril Networks** table
+# Replace **YOUR_BUILD_BRANCH_OR_TAG** with the appropriate branch or tag name
+# Please refer to the **Build from** column of the **Mithril networks** table above
 git switch **YOUR_BUILD_BRANCH_OR_TAG**
 ```
 
-Change directory
+Change the directory:
 
 ```bash
 cd mithril/mithril-client
 ```
 
-Run tests (Optional)
+Run tests (optional):
 
 ```bash
 make test
 ```
 
-Build executable
+Build the executable:
 
 ```bash
 make build
 ```
 
-## Verify binary
+## Verify the binary
 
-### Verify version
+### Verify the version
 
-Check that the Mithril Signer binary is running the correct version by running
+To check if the version of the Mithril Signer binary is correct, use the following command:
 
 ```bash
 ./mithril-client -V
 ```
 
-You should see something like
+You should see something like:
 
 ```bash
 mithril-client 0.2.0
 ```
 
-:warning: Verify that the version displayed is the version described in the content of the Release / Pre-Release note (see the **Build From** column of the above **Mithril Networks** table)
+:warning: Verify that the version displayed corresponds to the version specified in the content of the Release/Pre-release notes (refer to the **Build from** column in the 'Mithril networks' table above).
 
+### Verify the build
 
-### Verify build
-
-Check that the Mithril Client binary is working fine by running its help
+To verify that the Mithril Client binary is functioning correctly, run the following command to display its help menu:
 
 ```bash
 ./mithril-client -h
 ```
 
-You should see
+You should see:
 
 ```bash
-This program downloads, checks and restores certified blockchain snapshots.
+This program shows, downloads and verifies certified blockchain artifacts.
 
 Usage: mithril-client [OPTIONS] <COMMAND>
 
 Commands:
-  list      List available snapshots
-  show      Show detailed informations about a snapshot
-  download  Download a snapshot
-  restore   Restore a snapshot
-  help      Print this message or the help of the given subcommand(s)
+  snapshot                    Snapshot commands
+  mithril-stake-distribution  Mithril Stake Distribution management (alias: msd)
+  help                        Print this message or the help of the given subcommand(s)
 
 Options:
       --run-mode <RUN_MODE>
@@ -130,24 +134,26 @@ Options:
       --aggregator-endpoint <AGGREGATOR_ENDPOINT>
           Override configuration Aggregator endpoint URL
   -h, --help
-          Print help information
+          Print help
   -V, --version
-          Print version information
+          Print version
+
+
 ```
 
 :::tip
 
-You can use the `--json` option in order to display results in `JSON` format for the `list` and `show` commands:
+To display results in JSON format for the `list` and `show` commands of the Mithril Client, you can use the `--json` option:
 
 ```bash
-./mithril-client list --json
+./mithril-client snapshot list --json
 ```
 
 :::
 
 :::tip
 
-If you want to dig deeper, you can get access to several level of logs from the Mithril Client:
+If you wish to delve deeper and access several levels of logs from the Mithril Client, you can use the following:
 
 * Add `-v` for some logs (WARN)
 * Add `-vv` for more logs (INFO)
@@ -156,43 +162,47 @@ If you want to dig deeper, you can get access to several level of logs from the 
 
 :::
 
+## Download the pre-built binary
+
 <CompiledBinaries />
 
-## Run Docker container
+## Run the Docker container
 
-The list of available images on the registry is listed [here](https://github.com/input-output-hk/mithril/pkgs/container/mithril-client)
+The list of available images on the registry is listed [here](https://github.com/input-output-hk/mithril/pkgs/container/mithril-client).
 
-Prepare an environment variable with the selected Docker image
+Prepare an environment variable with the selected Docker image:
 
 ```bash
 export MITHRIL_IMAGE_ID=**YOUR_MITHRIL_IMAGE_ID**
 ```
 
-Here is an example configuration for the `latest` stable Docker image
+Here is an example configuration for the `latest` stable Docker image:
 
 ```bash
 export MITHRIL_IMAGE_ID=latest
 ```
 
-Then create a shell function for the Mithril Client:
+Then, create a shell function for the Mithril Client:
+
 ```bash
 mithril_client () {
   docker run --rm -e NETWORK=$NETWORK -e GENESIS_VERIFICATION_KEY=$GENESIS_VERIFICATION_KEY -e AGGREGATOR_ENDPOINT=$AGGREGATOR_ENDPOINT --name='mithril-client' -v $(pwd):/app/data -u $(id -u) ghcr.io/input-output-hk/mithril-client:$MITHRIL_IMAGE_ID $@
 }
 ```
 
-Now you can use the `mithril_client` function:
+You can now use the `mithril_client` function:
+
 ```bash
 # 1- Help
 mithril_client help
 
 # 2- List snapshots
-mithril_client list
+mithril_client snapshot list
 ```
 
 :::tip
 
-In the following part of the document, you will need to replace the `./mithril-client` commands with `mithril_client` in order to use the above shell function.
+In the following part of the document, you will need to replace the `./mithril-client` commands with `mithril_client` to use the above shell function.
 
 :::
 
@@ -215,94 +225,82 @@ export GENESIS_VERIFICATION_KEY=$(wget -q -O - **YOUR_GENESIS_VERIFICATION_KEY**
 export SNAPSHOT_DIGEST=$(curl -sL $AGGREGATOR_ENDPOINT/artifact/snapshots | jq -r '.[0].digest')
 ```
 
-### Step 2: Select A Snapshot
+### Step 2: Select a snapshot
 
-List the available snapshots with which you can bootstrap a Cardano node
-
-```bash
-./mithril-client list
-```
-
-You will see a list of snapshots
+List the available snapshots with which you can bootstrap a Cardano node:
 
 ```bash
-+---------+------------------------------------------------------------------+------------+-----------+--------------------------------+
-| Network | Digest                                                           | Size       | Locations | Created                        |
-+---------+------------------------------------------------------------------+------------+-----------+--------------------------------+
-| testnet | cd587611b5ff2445c714bef083d9455ed3e42e9304ae0ad38b02432d03f9b068 | 5273560121 |         1 | 2022-07-10T11:19:18.042554390Z |
-+---------+------------------------------------------------------------------+------------+-----------+--------------------------------+
-| testnet | 22267a8399cbd1731420f7241c91bec66b3126c971d53b1cdf4db0c016320df4 | 5267582819 |         1 | 2022-07-10T05:44:59.048360039Z |
-+---------+------------------------------------------------------------------+------------+-----------+--------------------------------+
-| testnet | c14792945b3880fa9f8880348f885c707b8e4d13cdb035b9a735c15f88ea45db | 5265335799 |         1 | 2022-07-10T00:03:43.656860711Z |
-+---------+------------------------------------------------------------------+------------+-----------+--------------------------------+
-| testnet | 0344faf7ebcd7cbf606288bfc8e7c11f992bd4f28f3ac159942b487a0217f485 | 5265577167 |         1 | 2022-07-09T18:31:16.604292173Z |
-+---------+------------------------------------------------------------------+------------+-----------+--------------------------------+
-| testnet | fc42ef98e233717a7180502dc51aab1ca64d5bd6d6e9d72b4096ac1f7e45a129 | 5262797245 |         1 | 2022-07-09T12:45:20.306735843Z |
-+---------+------------------------------------------------------------------+------------+-----------+--------------------------------+
+./mithril-client snapshot list
 ```
 
-### Step 3: Show Snapshot Details
-
-Get some more details from a specific snapshot (Optional)
+You will see a list of snapshots:
 
 ```bash
-./mithril-client show $SNAPSHOT_DIGEST
++-------+-----------+------------------------------------------------------------------+------------+-----------+--------------------------------+
+| Epoch | Immutable | Digest                                                           | Size       | Locations | Created                        |
++-------+-----------+------------------------------------------------------------------+------------+-----------+--------------------------------+
+| 72    | 1379      | a305aa11b0e2ccf737d4f5def8b0a9f2245eded2b4ec4be876f7bd64deddcbbf | 1259745182 |         1 | 2023-05-31T14:02:40.150189810Z |
++-------+-----------+------------------------------------------------------------------+------------+-----------+--------------------------------+
+| 72    | 1378      | 5c2214b0b3a00cccacc96b65f9741d4e818df0bc092bee30986e4d554396c6fd | 1258142105 |         1 | 2023-05-31T07:48:08.357263836Z |
++-------+-----------+------------------------------------------------------------------+------------+-----------+--------------------------------+
+| 72    | 1377      | 7cea14e5742387ca770a74f3e3cfdd93fc38573e2babbf05df292888a528ab15 | 1256695921 |         1 | 2023-05-31T01:56:38.178640636Z |
++-------+-----------+------------------------------------------------------------------+------------+-----------+--------------------------------+
+| 72    | 1376      | 4cb153b55f6cadf47bc48cc3112c16a037ee49416820190dc9e121d4aa49369f | 1255258102 |         1 | 2023-05-30T20:11:54.620669432Z |
++-------+-----------+------------------------------------------------------------------+------------+-----------+--------------------------------+
+|       |           |                                                                  |            |           |                                |
+…
 ```
 
-You will see more information about a snapshot
+### Step 3: Show snapshot details
+
+To get more details from a specific snapshot (optional), run:
 
 ```bash
-+------------+--------------------------------------------------------------------------------------------------------------------------------+
-| Info       | Value                                                                                                                          |
-+------------+--------------------------------------------------------------------------------------------------------------------------------+
-| Network    | testnet                                                                                                                        |
-+------------+--------------------------------------------------------------------------------------------------------------------------------+
-| Digest     | cd587611b5ff2445c714bef083d9455ed3e42e9304ae0ad38b02432d03f9b068                                                               |
-+------------+--------------------------------------------------------------------------------------------------------------------------------+
-| Size       | 5273560121                                                                                                                     |
-+------------+--------------------------------------------------------------------------------------------------------------------------------+
-| Location 1 | https://storage.googleapis.com/cardano-testnet/testnet.cd587611b5ff2445c714bef083d9455ed3e42e9304ae0ad38b02432d03f9b068.tar.gz |
-+------------+--------------------------------------------------------------------------------------------------------------------------------+
-| Created    | 2022-07-10T11:19:18.042554390Z                                                                                                 |
+./mithril-client snapshot show $SNAPSHOT_DIGEST
 ```
 
-### Step 4: Download Selected Snapshot
-
-Download the selected snapshot from the remote location to your remote location
+You will see more information about the snapshot:
 
 ```bash
-./mithril-client download $SNAPSHOT_DIGEST
++-----------------------+-------------------------------------------------------------------------------------------------------------------------------+
+| Info                  | Value                                                                                                                         |
++-----------------------+-------------------------------------------------------------------------------------------------------------------------------+
+| Epoch                 | 72                                                                                                                            |
++-----------------------+-------------------------------------------------------------------------------------------------------------------------------+
+| Immutable File Number | 1379                                                                                                                          |
++-----------------------+-------------------------------------------------------------------------------------------------------------------------------+
+| Digest                | a305aa11b0e2ccf737d4f5def8b0a9f2245eded2b4ec4be876f7bd64deddcbbf                                                              |
++-----------------------+-------------------------------------------------------------------------------------------------------------------------------+
+| Size                  | 1259745182                                                                                                                    |
++-----------------------+-------------------------------------------------------------------------------------------------------------------------------+
+| Location 1            | https://storage.googleapis.com/mithril-release-preprod-…aa11b0e2ccf737d4f5def8b0a9f2245eded2b4ec4be876f7bd64deddcbbf.tar.gz   |
++-----------------------+-------------------------------------------------------------------------------------------------------------------------------+
+| Created               | 2023-05-31T14:02:40.150189810Z                                                                                                |
++-----------------------+-------------------------------------------------------------------------------------------------------------------------------+
 ```
 
-You will see that the selected snapshot archive has been downloaded locally
+### Step 4: Download the selected snapshot
+
+To download the selected snapshot from the remote location to your remote location, run:
 
 ```bash
-Download success cd587611b5ff2445c714bef083d9455ed3e42e9304ae0ad38b02432d03f9b068 #1
-from https://storage.googleapis.com/cardano-testnet/testnet.cd587611b5ff2445c714bef083d9455ed3e42e9304ae0ad38b02432d03f9b068.tar.gz
-to /home/mithril/data/testnet/cd587611b5ff2445c714bef083d9455ed3e42e9304ae0ad38b02432d03f9b068/snapshot.archive.tar.gz
+./mithril-client snapshot download $SNAPSHOT_DIGEST
 ```
 
-### Step 5: Restore Selected Snapshot
 
-Verify the Certificate of the snapshot and unpack its content in order to feed the Cardano node database
-
-```bash
-./mithril-client restore $SNAPSHOT_DIGEST
-```
-
-You will see that the snapshot archive is unpacked and that the associated certificate is valid
+You will see that the selected snapshot archive has been downloaded locally, unpacked, and that the associated certificate is valid:
 
 ```bash
 Unpacking snapshot...
 Unpack success cd587611b5ff2445c714bef083d9455ed3e42e9304ae0ad38b02432d03f9b068
 to /home/mithril/data/testnet/cd587611b5ff2445c714bef083d9455ed3e42e9304ae0ad38b02432d03f9b068/db
 
-Restore a Cardano Node with:
+Restore a Cardano node:
 
 docker run -v cardano-node-ipc:/ipc -v cardano-node-data:/data --mount type=bind,source="/home/mithril/data/testnet/cd587611b5ff2445c714bef083d9455ed3e42e9304ae0ad38b02432d03f9b068/db",target=/data/db/ -e NETWORK=testnet inputoutput/cardano-node
 ```
 
-### Step 6: Launch a Cardano Node From Restored Snapshot
+### Step 5: Launch a Cardano node from the restored snapshot
 
 Launch an empty Cardano node and make it live in minutes!
 
@@ -310,7 +308,7 @@ Launch an empty Cardano node and make it live in minutes!
 docker run -v cardano-node-ipc:/ipc -v cardano-node-data:/data --mount type=bind,source="$(pwd)/data/testnet/$SNAPSHOT_DIGEST/db",target=/data/db/ -e NETWORK=**YOUR_CARDANO_NETWORK** inputoutput/cardano-node
 ```
 
-You will see the node start by validating the files injested from the snapshot archive
+You will see the node start by validating the files ingested from the snapshot archive:
 
 ```bash
 Starting: /nix/store/gps7n088g6xv3zqg281sng821471vq78-cardano-node-exe-cardano-node-1.35.1/bin/cardano-node run
@@ -475,7 +473,7 @@ NodeToClientV_13 HardForkNodeToClientEnabled HardForkSpecificNodeToClientVersion
 [c995d1df:cardano.node.ErrorPolicy:Notice:343] [2022-07-10 13:53:39.95 UTC] IP 3.131.32.242:3001 ErrorPolicySuspendConsumer (Just (ConnectionExceptionTrace (SubscriberError {seType = SubscriberParallelConnectionCancelled, seMessage = "Parallel connection cancelled", seStack = []}))) 1s
 ```
 
-Then the Cardano node will synchronize with the other nodes of the network and start adding blockss
+Then, the Cardano node will synchronize with the other network nodes and start adding blocks:
 
 ```bash
 [c995d1df:cardano.node.ChainDB:Notice:322] [2022-07-10 13:53:40.06 UTC] Chain extended, new tip: 7ae33b2f4bc8b84e77dfd539f0f6e7f59b293e96f62fdcfdb17cbd7a006fe5c0 at slot 63081906

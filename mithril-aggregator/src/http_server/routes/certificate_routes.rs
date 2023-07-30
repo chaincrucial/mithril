@@ -1,10 +1,10 @@
 use crate::http_server::routes::middlewares;
-use crate::DependencyManager;
+use crate::DependencyContainer;
 use std::sync::Arc;
 use warp::Filter;
 
 pub fn routes(
-    dependency_manager: Arc<DependencyManager>,
+    dependency_manager: Arc<DependencyContainer>,
 ) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
     certificate_pending(dependency_manager.clone())
         .or(certificate_certificates(dependency_manager.clone()))
@@ -13,7 +13,7 @@ pub fn routes(
 
 /// GET /certificate-pending
 fn certificate_pending(
-    dependency_manager: Arc<DependencyManager>,
+    dependency_manager: Arc<DependencyContainer>,
 ) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
     warp::path!("certificate-pending")
         .and(warp::get())
@@ -25,7 +25,7 @@ fn certificate_pending(
 
 /// GET /certificates
 fn certificate_certificates(
-    dependency_manager: Arc<DependencyManager>,
+    dependency_manager: Arc<DependencyContainer>,
 ) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
     warp::path!("certificates")
         .and(warp::get())
@@ -35,7 +35,7 @@ fn certificate_certificates(
 
 /// GET /certificate/{certificate_hash}
 fn certificate_certificate_hash(
-    dependency_manager: Arc<DependencyManager>,
+    dependency_manager: Arc<DependencyContainer>,
 ) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
     warp::path!("certificate" / String)
         .and(warp::get())
@@ -44,10 +44,14 @@ fn certificate_certificate_hash(
 }
 
 mod handlers {
-    use crate::certifier_service::CertifierService;
-    use crate::http_server::routes::reply;
-    use crate::message_adapters::{ToCertificateListMessageAdapter, ToCertificateMessageAdapter};
-    use crate::{CertificatePendingStore, ToCertificatePendingMessageAdapter};
+    use crate::{
+        http_server::routes::reply,
+        message_adapters::{ToCertificateListMessageAdapter, ToCertificateMessageAdapter},
+        services::CertifierService,
+        CertificatePendingStore, ToCertificatePendingMessageAdapter,
+    };
+
+    use mithril_common::messages::ToMessageAdapter;
     use slog_scope::{debug, warn};
     use std::convert::Infallible;
     use std::sync::Arc;
@@ -124,20 +128,18 @@ mod handlers {
 
 #[cfg(test)]
 mod tests {
-    use crate::http_server::SERVER_BASE_PATH;
-    use mithril_common::store::adapter::FailStoreAdapter;
-    use mithril_common::test_utils::apispec::APISpec;
-    use mithril_common::{entities, test_utils::fake_data};
+    use mithril_common::test_utils::{apispec::APISpec, fake_data};
     use serde_json::Value::Null;
-    use warp::http::Method;
-    use warp::test::request;
+    use warp::{http::Method, test::request};
+
+    use crate::{
+        http_server::SERVER_BASE_PATH, initialize_dependencies, services::MockCertifierService,
+    };
 
     use super::*;
-    use crate::initialize_dependencies;
-    use crate::store::CertificateStore;
 
     fn setup_router(
-        dependency_manager: Arc<DependencyManager>,
+        dependency_manager: Arc<DependencyContainer>,
     ) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
         let cors = warp::cors()
             .allow_any_origin()
@@ -220,8 +222,8 @@ mod tests {
     async fn test_certificate_certificates_get_ok() {
         let dependency_manager = initialize_dependencies().await;
         dependency_manager
-            .certificate_store
-            .save(fake_data::genesis_certificate("{certificate_hash}"))
+            .certificate_repository
+            .create_certificate(fake_data::genesis_certificate("{certificate_hash}"))
             .await
             .expect("certificate store save should have succeeded");
 
@@ -247,11 +249,11 @@ mod tests {
     #[tokio::test]
     async fn test_certificate_certificates_get_ko() {
         let mut dependency_manager = initialize_dependencies().await;
-        let certificate_store = CertificateStore::new(Box::new(FailStoreAdapter::<
-            String,
-            entities::Certificate,
-        >::new()));
-        dependency_manager.certificate_store = Arc::new(certificate_store);
+        let mut certifier_service = MockCertifierService::new();
+        certifier_service
+            .expect_get_latest_certificates()
+            .returning(|_| Err("an error".into()));
+        dependency_manager.certifier_service = Arc::new(certifier_service);
 
         let method = Method::GET.as_str();
         let path = "/certificates";
@@ -276,8 +278,8 @@ mod tests {
     async fn test_certificate_certificate_hash_get_ok() {
         let dependency_manager = initialize_dependencies().await;
         dependency_manager
-            .certificate_store
-            .save(fake_data::genesis_certificate("{certificate_hash}"))
+            .certificate_repository
+            .create_certificate(fake_data::genesis_certificate("{certificate_hash}"))
             .await
             .expect("certificate store save should have succeeded");
 
@@ -326,11 +328,11 @@ mod tests {
     #[tokio::test]
     async fn test_certificate_certificate_hash_get_ko() {
         let mut dependency_manager = initialize_dependencies().await;
-        let certificate_store = CertificateStore::new(Box::new(FailStoreAdapter::<
-            String,
-            entities::Certificate,
-        >::new()));
-        dependency_manager.certificate_store = Arc::new(certificate_store);
+        let mut certifier_service = MockCertifierService::new();
+        certifier_service
+            .expect_get_certificate_by_hash()
+            .returning(|_| Err("an error".into()));
+        dependency_manager.certifier_service = Arc::new(certifier_service);
 
         let method = Method::GET.as_str();
         let path = "/certificate/{certificate_hash}";

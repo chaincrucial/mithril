@@ -39,28 +39,26 @@ use crate::{
     artifact_builder::{
         CardanoImmutableFilesFullArtifactBuilder, MithrilStakeDistributionArtifactBuilder,
     },
-    certifier_service::{CertifierService, MithrilCertifierService},
     configuration::ExecutionEnvironment,
-    database::{
-        provider::SignerRegistrationStore,
-        provider::{
-            CertificateRepository, CertificateStoreAdapter, EpochSettingStore,
-            OpenMessageRepository, SignedEntityStoreAdapter, SignedEntityStorer, SignerStore,
-            SingleSignatureRepository, StakePoolStore,
-        },
+    database::provider::{
+        CertificateRepository, EpochSettingStore, OpenMessageRepository, SignedEntityStoreAdapter,
+        SignedEntityStorer, SignerRegistrationStore, SignerStore, SingleSignatureRepository,
+        StakePoolStore,
     },
     event_store::{EventMessage, EventStore, TransmitterService},
     http_server::routes::router,
-    signed_entity_service::{MithrilSignedEntityService, SignedEntityService},
+    services::{
+        CertifierService, MithrilCertifierService, MithrilSignedEntityService,
+        MithrilStakeDistributionService, MithrilTickerService, SignedEntityService,
+        StakeDistributionService, TickerService,
+    },
     signer_registerer::SignerRecorder,
-    stake_distribution_service::{MithrilStakeDistributionService, StakeDistributionService},
-    ticker_service::{MithrilTickerService, TickerService},
     tools::{GcpFileUploader, GenesisToolsDependency},
-    AggregatorConfig, AggregatorRunner, AggregatorRuntime, CertificatePendingStore,
-    CertificateStore, Configuration, DependencyManager, DumbSnapshotUploader, DumbSnapshotter,
-    GzipSnapshotter, LocalSnapshotUploader, MithrilSignerRegisterer, MultiSigner, MultiSignerImpl,
-    ProtocolParametersStore, ProtocolParametersStorer, RemoteSnapshotUploader, SnapshotUploader,
-    SnapshotUploaderType, Snapshotter, VerificationKeyStorer,
+    AggregatorConfig, AggregatorRunner, AggregatorRuntime, CertificatePendingStore, Configuration,
+    DependencyContainer, DumbSnapshotUploader, DumbSnapshotter, GzipSnapshotter,
+    LocalSnapshotUploader, MithrilSignerRegisterer, MultiSigner, MultiSignerImpl,
+    ProtocolParametersStorer, RemoteSnapshotUploader, SnapshotUploader, SnapshotUploaderType,
+    Snapshotter, VerificationKeyStorer,
 };
 
 use super::{DependenciesBuilderError, Result};
@@ -98,14 +96,14 @@ pub struct DependenciesBuilder {
     /// Certificate pending store.
     pub certificate_pending_store: Option<Arc<CertificatePendingStore>>,
 
-    /// Certificate store.
-    pub certificate_store: Option<Arc<CertificateStore>>,
+    /// Certificate repository.
+    pub certificate_repository: Option<Arc<CertificateRepository>>,
 
     /// Verification key store.
     pub verification_key_store: Option<Arc<dyn VerificationKeyStorer>>,
 
     /// Protocol parameter store.
-    pub protocol_parameters_store: Option<Arc<ProtocolParametersStore>>,
+    pub protocol_parameters_store: Option<Arc<dyn ProtocolParametersStorer>>,
 
     /// Cardano CLI Runner for the [ChainObserver]
     pub cardano_cli_runner: Option<Box<CardanoCliRunner>>,
@@ -193,7 +191,7 @@ impl DependenciesBuilder {
             snapshot_uploader: None,
             multi_signer: None,
             certificate_pending_store: None,
-            certificate_store: None,
+            certificate_repository: None,
             verification_key_store: None,
             protocol_parameters_store: None,
             cardano_cli_runner: None,
@@ -275,7 +273,10 @@ impl DependenciesBuilder {
     }
 
     async fn build_stake_store(&mut self) -> Result<Arc<StakePoolStore>> {
-        let stake_pool_store = Arc::new(StakePoolStore::new(self.get_sqlite_connection().await?));
+        let stake_pool_store = Arc::new(StakePoolStore::new(
+            self.get_sqlite_connection().await?,
+            self.configuration.safe_epoch_retention_limit(),
+        ));
 
         Ok(stake_pool_store)
     }
@@ -386,19 +387,19 @@ impl DependenciesBuilder {
         Ok(self.certificate_pending_store.as_ref().cloned().unwrap())
     }
 
-    async fn build_certificate_store(&mut self) -> Result<Arc<CertificateStore>> {
-        Ok(Arc::new(CertificateStore::new(Box::new(
-            CertificateStoreAdapter::new(self.get_sqlite_connection().await?),
-        ))))
+    async fn build_certificate_repository(&mut self) -> Result<Arc<CertificateRepository>> {
+        Ok(Arc::new(CertificateRepository::new(
+            self.get_sqlite_connection().await?,
+        )))
     }
 
-    /// Get a configured [CertificateStore].
-    pub async fn get_certificate_store(&mut self) -> Result<Arc<CertificateStore>> {
-        if self.certificate_store.is_none() {
-            self.certificate_store = Some(self.build_certificate_store().await?);
+    /// Get a configured [CertificateRepository].
+    pub async fn get_certificate_repository(&mut self) -> Result<Arc<CertificateRepository>> {
+        if self.certificate_repository.is_none() {
+            self.certificate_repository = Some(self.build_certificate_repository().await?);
         }
 
-        Ok(self.certificate_store.as_ref().cloned().unwrap())
+        Ok(self.certificate_repository.as_ref().cloned().unwrap())
     }
 
     async fn build_verification_key_store(&mut self) -> Result<Arc<dyn VerificationKeyStorer>> {
@@ -416,15 +417,19 @@ impl DependenciesBuilder {
         Ok(self.verification_key_store.as_ref().cloned().unwrap())
     }
 
-    async fn build_protocol_parameters_store(&mut self) -> Result<Arc<ProtocolParametersStore>> {
-        Ok(Arc::new(ProtocolParametersStore::new(
-            Box::new(EpochSettingStore::new(self.get_sqlite_connection().await?)),
-            self.configuration.store_retention_limit,
+    async fn build_protocol_parameters_store(
+        &mut self,
+    ) -> Result<Arc<dyn ProtocolParametersStorer>> {
+        Ok(Arc::new(EpochSettingStore::new(
+            self.get_sqlite_connection().await?,
+            self.configuration.safe_epoch_retention_limit(),
         )))
     }
 
-    /// Get a configured [ProtocolParametersStore].
-    pub async fn get_protocol_parameters_store(&mut self) -> Result<Arc<ProtocolParametersStore>> {
+    /// Get a configured [ProtocolParametersStorer].
+    pub async fn get_protocol_parameters_store(
+        &mut self,
+    ) -> Result<Arc<dyn ProtocolParametersStorer>> {
         if self.protocol_parameters_store.is_none() {
             self.protocol_parameters_store = Some(self.build_protocol_parameters_store().await?);
         }
@@ -643,7 +648,7 @@ impl DependenciesBuilder {
             self.get_chain_observer().await?,
             self.get_verification_key_store().await?,
             self.get_signer_recorder().await?,
-            self.configuration.store_retention_limit.map(|l| l as u64),
+            self.configuration.safe_epoch_retention_limit(),
         );
 
         Ok(Arc::new(registerer))
@@ -914,16 +919,16 @@ impl DependenciesBuilder {
         Ok(self.signed_entity_storer.as_ref().cloned().unwrap())
     }
 
-    /// Return an unconfigured [DependencyManager]
-    pub async fn build_dependency_container(&mut self) -> Result<DependencyManager> {
-        let dependency_manager = DependencyManager {
+    /// Return an unconfigured [DependencyContainer]
+    pub async fn build_dependency_container(&mut self) -> Result<DependencyContainer> {
+        let dependency_manager = DependencyContainer {
             config: self.configuration.clone(),
             sqlite_connection: self.get_sqlite_connection().await?,
             stake_store: self.get_stake_store().await?,
             snapshot_uploader: self.get_snapshot_uploader().await?,
             multi_signer: self.get_multi_signer().await?,
             certificate_pending_store: self.get_certificate_pending_store().await?,
-            certificate_store: self.get_certificate_store().await?,
+            certificate_repository: self.get_certificate_repository().await?,
             verification_key_store: self.get_verification_key_store().await?,
             protocol_parameters_store: self.get_protocol_parameters_store().await?,
             chain_observer: self.get_chain_observer().await?,
@@ -1045,7 +1050,7 @@ impl DependenciesBuilder {
     pub async fn create_genesis_container(&mut self) -> Result<GenesisToolsDependency> {
         let dependencies = GenesisToolsDependency {
             beacon_provider: self.get_beacon_provider().await?,
-            certificate_store: self.get_certificate_store().await?,
+            certificate_repository: self.get_certificate_repository().await?,
             certificate_verifier: self.get_certificate_verifier().await?,
             genesis_verifier: self.get_genesis_verifier().await?,
             protocol_parameters_store: self.get_protocol_parameters_store().await?,
@@ -1085,9 +1090,7 @@ impl DependenciesBuilder {
         let single_signature_repository = Arc::new(SingleSignatureRepository::new(
             self.get_sqlite_connection().await?,
         ));
-        let certificate_repository = Arc::new(CertificateRepository::new(
-            self.get_sqlite_connection().await?,
-        ));
+        let certificate_repository = self.get_certificate_repository().await?;
         let certificate_verifier = self.get_certificate_verifier().await?;
         let genesis_verifier = self.get_genesis_verifier().await?;
         let multi_signer = self.get_multi_signer().await?;

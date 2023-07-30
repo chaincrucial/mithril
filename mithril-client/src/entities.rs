@@ -3,8 +3,8 @@ use cli_table::{format::Justify, Table};
 use serde::Serialize;
 
 use mithril_common::{
-    entities::{Epoch, Snapshot},
-    messages::MithrilStakeDistributionListItemMessage,
+    entities::Epoch,
+    messages::{MithrilStakeDistributionListItemMessage, SnapshotListItemMessage},
 };
 
 /// SnapshotListItem represents a snapshot list item from an aggregator
@@ -40,9 +40,9 @@ pub struct SnapshotListItem {
     pub created_at: DateTime<Utc>,
 }
 
-impl From<Snapshot> for SnapshotListItem {
-    fn from(value: Snapshot) -> Self {
-        SnapshotListItem {
+impl From<SnapshotListItemMessage> for SnapshotListItem {
+    fn from(value: SnapshotListItemMessage) -> Self {
+        Self {
             epoch: value.beacon.epoch,
             immutable_file_number: value.beacon.immutable_file_number,
             network: value.beacon.network,
@@ -114,6 +114,10 @@ pub struct MithrilStakeDistributionListItem {
     #[table(title = "Certificate Hash")]
     /// Hash of the associated certificate
     pub certificate_hash: String,
+
+    /// Date and time at which the Mithril Stake Distribution was created
+    #[table(title = "Created", justify = "Justify::Right")]
+    pub created_at: DateTime<Utc>,
 }
 
 impl From<MithrilStakeDistributionListItemMessage> for MithrilStakeDistributionListItem {
@@ -122,6 +126,7 @@ impl From<MithrilStakeDistributionListItemMessage> for MithrilStakeDistributionL
             epoch: value.epoch,
             hash: value.hash,
             certificate_hash: value.certificate_hash,
+            created_at: value.created_at,
         }
     }
 }

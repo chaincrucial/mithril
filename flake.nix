@@ -28,7 +28,7 @@
 
         clean = root:
           lib.cleanSourceWith {
-            src = lib.cleanSource root;
+            src = lib.cleanSource (craneLib.path root);
             filter = orig_path: type: let
               path = builtins.toString orig_path;
               base = builtins.baseNameOf path;
@@ -54,30 +54,59 @@
             pkgs.darwin.libiconv
           ];
 
-        buildPackage = name: cargoToml:
-          craneLib.buildPackage {
-            inherit (craneLib.crateNameFromCargoToml {inherit cargoToml;}) pname version;
-            cargoExtraArgs = "-p ${name}";
-            src = clean ./.;
-            inherit buildInputs;
-            CARGO_TERM_VERBOSE = "true";
-          };
+        commonsArgs = {
+          pname = "mithril";
+          version = "0.0.1";
+          src = clean ./.;
+          inherit buildInputs;
+          CARGO_TERM_VERBOSE = "true";
+        };
+
+        buildDeps = cargoToml: cargoArtifacts:
+          (craneLib.buildDepsOnly (commonsArgs
+            // lib.optionalAttrs (cargoToml != null) rec {
+              inherit (craneLib.crateNameFromCargoToml {inherit cargoToml;}) pname version;
+              cargoExtraArgs = "-p ${pname}";
+            }))
+          .overrideAttrs (_: {
+            inherit cargoArtifacts;
+            preInstall = let
+              # Need to remove dummy builds of local builds so that they can be built again
+              localLibs = "dummy|mithril|stm|multi_sig|size_benches|digester";
+            in ''
+              shopt -s extglob
+              rm ''${CARGO_TARGET_DIR:-target}/release/deps/*@(${localLibs})*
+              rm -r ''${CARGO_TARGET_DIR:-target}/release/*@(${localLibs})*
+              rm -r ''${CARGO_TARGET_DIR:-target}/release/build/*@(${localLibs})*
+              rm -r ''${CARGO_TARGET_DIR:-target}/release/.fingerprint/*@(${localLibs})*
+            '';
+          });
+
+        buildPackage = cargoToml: baseCargoArtifacts: args:
+          craneLib.buildPackage (commonsArgs
+            // lib.optionalAttrs (cargoToml != null) rec {
+              inherit (craneLib.crateNameFromCargoToml {inherit cargoToml;}) pname version;
+              cargoExtraArgs = "-p ${pname}";
+            }
+            // {
+              cargoArtifacts = buildDeps cargoToml baseCargoArtifacts;
+            }
+            // args);
+
+        mithril-stm = buildPackage ./mithril-stm/Cargo.toml null {};
+        mithril-common = buildPackage ./mithril-common/Cargo.toml mithril-stm.cargoArtifacts {};
+        mithril = buildPackage null mithril-common.cargoArtifacts {
+          doCheck = false;
+        };
       in {
         packages = {
-          default = craneLib.buildPackage {
-            pname = "mithril";
-            version = "0.0.1";
-            src = clean ./.;
-            doCheck = false; # some tests require cardano-cli
-            inherit buildInputs;
-            CARGO_TERM_VERBOSE = "true";
-          };
-
-          mithril-client = buildPackage "mithril-client" ./mithril-client/Cargo.toml;
-          mithril-aggregator = buildPackage "mithril-aggregator" ./mithril-aggregator/Cargo.toml;
-          mithril-signer = buildPackage "mithril-signer" ./mithril-signer/Cargo.toml;
-          mithrildemo = buildPackage "mithrildemo" ./demo/protocol-demo/Cargo.toml;
-          mithril-end-to-end = buildPackage "mithril-end-to-end" ./mithril-test-lab/mithril-end-to-end/Cargo.toml;
+          default = mithril;
+          inherit mithril mithril-stm mithril-common;
+          mithril-client = buildPackage ./mithril-client/Cargo.toml mithril.cargoArtifacts {};
+          mithril-aggregator = buildPackage ./mithril-aggregator/Cargo.toml mithril.cargoArtifacts {};
+          mithril-signer = buildPackage ./mithril-signer/Cargo.toml mithril.cargoArtifacts {};
+          mithrildemo = buildPackage ./demo/protocol-demo/Cargo.toml mithril.cargoArtifacts {};
+          mithril-end-to-end = buildPackage ./mithril-test-lab/mithril-end-to-end/Cargo.toml mithril.cargoArtifacts {};
         };
 
         devShells.default = pkgs.mkShell {

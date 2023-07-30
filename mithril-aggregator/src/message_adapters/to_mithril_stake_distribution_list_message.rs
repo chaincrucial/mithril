@@ -1,14 +1,16 @@
 use mithril_common::entities::{MithrilStakeDistribution, SignedEntity};
 use mithril_common::messages::{
-    MessageAdapter, MithrilStakeDistributionListItemMessage, MithrilStakeDistributionListMessage,
+    MithrilStakeDistributionListItemMessage, MithrilStakeDistributionListMessage, ToMessageAdapter,
 };
 
 /// Adapter to convert a list of [MithrilStakeDistribution] to [MithrilStakeDistributionListMessage] instances
 pub struct ToMithrilStakeDistributionListMessageAdapter;
 
 impl
-    MessageAdapter<Vec<SignedEntity<MithrilStakeDistribution>>, MithrilStakeDistributionListMessage>
-    for ToMithrilStakeDistributionListMessageAdapter
+    ToMessageAdapter<
+        Vec<SignedEntity<MithrilStakeDistribution>>,
+        MithrilStakeDistributionListMessage,
+    > for ToMithrilStakeDistributionListMessageAdapter
 {
     /// Method to trigger the conversion
     fn adapt(
@@ -20,6 +22,7 @@ impl
                 epoch: entity.artifact.epoch,
                 hash: entity.artifact.hash,
                 certificate_hash: entity.certificate_id,
+                created_at: entity.created_at,
             })
             .collect()
     }
@@ -41,8 +44,6 @@ mod tests {
             epoch: Epoch(1),
             signers_with_stake: fake_data::signers_with_stakes(1),
             hash: "hash-123".to_string(),
-            certificate_hash: "certificate-hash-123".to_string(),
-            created_at: DateTime::<Utc>::default(),
             protocol_parameters: fake_data::protocol_parameters(),
         };
         let signed_entity = SignedEntity {
@@ -50,7 +51,9 @@ mod tests {
             signed_entity_type: SignedEntityType::MithrilStakeDistribution(Epoch(0)),
             certificate_id: "certificate-hash-123".to_string(),
             artifact: mithril_stake_distribution,
-            created_at: DateTime::<Utc>::default(),
+            created_at: DateTime::parse_from_rfc3339("2023-01-19T13:43:05.618857482Z")
+                .unwrap()
+                .with_timezone(&Utc),
         };
         let mithril_stake_distribution_list_message =
             ToMithrilStakeDistributionListMessageAdapter::adapt(vec![signed_entity]);
@@ -59,6 +62,9 @@ mod tests {
                 epoch: Epoch(1),
                 hash: "hash-123".to_string(),
                 certificate_hash: "certificate-hash-123".to_string(),
+                created_at: DateTime::parse_from_rfc3339("2023-01-19T13:43:05.618857482Z")
+                    .unwrap()
+                    .with_timezone(&Utc),
             }];
 
         assert_eq!(

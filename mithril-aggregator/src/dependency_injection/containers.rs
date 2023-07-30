@@ -1,3 +1,7 @@
+use sqlite::Connection;
+use std::{collections::HashMap, sync::Arc};
+use tokio::sync::{Mutex, RwLock};
+
 use mithril_common::{
     api_version::APIVersionProvider,
     certificate_chain::CertificateVerifier,
@@ -11,32 +15,25 @@ use mithril_common::{
     test_utils::MithrilFixture,
     BeaconProvider,
 };
-use sqlite::Connection;
 
-use std::{collections::HashMap, sync::Arc};
-use tokio::sync::{Mutex, RwLock};
-
-use crate::event_store::EventMessage;
-use crate::signed_entity_service::SignedEntityService;
+use crate::database::provider::CertificateRepository;
 use crate::{
-    certifier_service::CertifierService,
     configuration::*,
     database::provider::{SignedEntityStorer, StakePoolStore},
+    event_store::{EventMessage, TransmitterService},
+    multi_signer::MultiSigner,
+    services::{CertifierService, SignedEntityService, StakeDistributionService, TickerService},
     signer_registerer::SignerRecorder,
-    ticker_service::TickerService,
-    CertificatePendingStore, CertificateStore, ProtocolParametersStore, ProtocolParametersStorer,
-    SignerRegisterer, SignerRegistrationRoundOpener, Snapshotter, VerificationKeyStorer,
-};
-use crate::{event_store::TransmitterService, multi_signer::MultiSigner};
-use crate::{
-    snapshot_uploaders::SnapshotUploader, stake_distribution_service::StakeDistributionService,
+    snapshot_uploaders::SnapshotUploader,
+    CertificatePendingStore, ProtocolParametersStorer, SignerRegisterer,
+    SignerRegistrationRoundOpener, Snapshotter, VerificationKeyStorer,
 };
 
 /// MultiSignerWrapper wraps a MultiSigner
 pub type MultiSignerWrapper = Arc<RwLock<dyn MultiSigner>>;
 
 /// DependencyManager handles the dependencies
-pub struct DependencyManager {
+pub struct DependencyContainer {
     /// Configuration structure.
     pub config: Configuration,
 
@@ -59,13 +56,13 @@ pub struct DependencyManager {
     pub certificate_pending_store: Arc<CertificatePendingStore>,
 
     /// Certificate store.
-    pub certificate_store: Arc<CertificateStore>,
+    pub certificate_repository: Arc<CertificateRepository>,
 
     /// Verification key store.
     pub verification_key_store: Arc<dyn VerificationKeyStorer>,
 
     /// Protocol parameter store.
-    pub protocol_parameters_store: Arc<ProtocolParametersStore>,
+    pub protocol_parameters_store: Arc<dyn ProtocolParametersStorer>,
 
     /// Chain observer service.
     pub chain_observer: Arc<dyn ChainObserver>,
@@ -136,7 +133,7 @@ pub enum SimulateFromChainParams {
 }
 
 #[doc(hidden)]
-impl DependencyManager {
+impl DependencyContainer {
     /// `TEST METHOD ONLY`
     ///
     /// Get the first two epochs that will be used by a newly started aggregator
@@ -222,12 +219,10 @@ impl DependencyManager {
             self.fill_stakes_store(epoch, params.0.to_vec()).await;
         }
 
-        for certificate in certificate_chain {
-            self.certificate_store
-                .save(certificate.to_owned())
-                .await
-                .expect("certificate_store::save should not fail");
-        }
+        self.certificate_repository
+            .create_many_certificates(certificate_chain)
+            .await
+            .expect("certificate_repository::create_many_certificates should not fail");
 
         if additional_params.contains(&SimulateFromChainParams::SetupMultiSigner) {
             let mut multi_signer = self.multi_signer.write().await;
@@ -317,9 +312,9 @@ impl DependencyManager {
 
 #[cfg(test)]
 pub mod tests {
-    use crate::{dependency_injection::DependenciesBuilder, Configuration, DependencyManager};
+    use crate::{dependency_injection::DependenciesBuilder, Configuration, DependencyContainer};
 
-    pub async fn initialize_dependencies() -> DependencyManager {
+    pub async fn initialize_dependencies() -> DependencyContainer {
         let config = Configuration::new_sample();
         let mut builder = DependenciesBuilder::new(config);
 

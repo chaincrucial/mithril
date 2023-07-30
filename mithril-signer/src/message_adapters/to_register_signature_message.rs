@@ -1,17 +1,18 @@
 use mithril_common::entities::{SignedEntityType, SingleSignatures};
-use mithril_common::messages::RegisterSignatureMessage;
+use mithril_common::messages::{RegisterSignatureMessage, ToMessageAdapter};
 
 pub struct ToRegisterSignatureMessageAdapter;
 
-impl ToRegisterSignatureMessageAdapter {
-    pub fn adapt(
-        signed_entity_type: SignedEntityType,
-        single_signature: SingleSignatures,
+impl ToMessageAdapter<(SignedEntityType, SingleSignatures), RegisterSignatureMessage>
+    for ToRegisterSignatureMessageAdapter
+{
+    fn adapt(
+        (signed_entity_type, single_signature): (SignedEntityType, SingleSignatures),
     ) -> RegisterSignatureMessage {
         RegisterSignatureMessage {
             signed_entity_type: Some(signed_entity_type),
             party_id: single_signature.party_id,
-            signature: single_signature.signature,
+            signature: single_signature.signature.try_into().unwrap(),
             won_indexes: single_signature.won_indexes,
         }
     }
@@ -26,8 +27,8 @@ mod tests {
     #[test]
     fn adapt_ok() {
         let single_signature = fake_data::single_signatures([1, 3].to_vec());
-        let message =
-            ToRegisterSignatureMessageAdapter::adapt(SignedEntityType::dummy(), single_signature);
+        let message: RegisterSignatureMessage =
+            ToRegisterSignatureMessageAdapter::adapt((SignedEntityType::dummy(), single_signature));
 
         assert_eq!("party_id".to_string(), message.party_id);
     }
