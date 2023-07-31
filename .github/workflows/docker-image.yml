@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   
 env:
-  build_tag: 2329.0
+  build_tag: "2329.0"
   registry: ghcr.io
 
 jobs:
