@@ -8,7 +8,7 @@ use mithril_common::{
     crypto_helper::KESPeriod,
     entities::{
         Epoch, HexEncodedOpCert, HexEncodedVerificationKey, HexEncodedVerificationKeySignature,
-        PartyId, Signer, SignerWithStake, Stake,
+        PartyId, Signer, SignerWithStake, Stake, StakeDistribution,
     },
     sqlite::{
         EntityCursor, HydrationError, Projection, Provider, SourceAlias, SqLiteEntity,
@@ -194,7 +194,7 @@ impl<'client> SignerRegistrationRecordProvider<'client> {
     }
 
     fn condition_by_epoch(&self, epoch: &Epoch) -> Result<WhereCondition, StdError> {
-        let epoch: i64 = i64::try_from(epoch.0)?;
+        let epoch: i64 = epoch.try_into()?;
 
         Ok(WhereCondition::new(
             "epoch_setting_id = ?*",
@@ -270,7 +270,7 @@ impl<'conn> InsertOrReplaceSignerRegistrationRecordProvider<'conn> {
             vec![
                 Value::String(signer_registration_record.signer_id),
                 Value::Integer(
-                    i64::try_from(signer_registration_record.epoch_setting_id.0).unwrap(),
+                    signer_registration_record.epoch_setting_id.try_into().unwrap(),
                 ),
                 Value::String(signer_registration_record.verification_key),
                 signer_registration_record
@@ -361,7 +361,7 @@ impl<'conn> DeleteSignerRegistrationRecordProvider<'conn> {
 
     /// Create the SQL condition to delete a record given the Epoch.
     fn get_delete_condition_by_epoch(&self, epoch: Epoch) -> WhereCondition {
-        let epoch_threshold = Value::Integer(i64::try_from(epoch.0).unwrap());
+        let epoch_threshold = Value::Integer(epoch.try_into().unwrap());
 
         WhereCondition::new("epoch_setting_id = ?*", vec![epoch_threshold])
     }
@@ -375,7 +375,7 @@ impl<'conn> DeleteSignerRegistrationRecordProvider<'conn> {
 
     /// Create the SQL condition to prune data older than the given Epoch.
     fn get_prune_condition(&self, epoch_threshold: Epoch) -> WhereCondition {
-        let epoch_threshold = Value::Integer(i64::try_from(epoch_threshold.0).unwrap());
+        let epoch_threshold = Value::Integer(epoch_threshold.try_into().unwrap());
 
         WhereCondition::new("epoch_setting_id < ?*", vec![epoch_threshold])
     }
@@ -458,6 +458,26 @@ impl VerificationKeyStorer for SignerRegistrationStore {
 
         Ok(())
     }
+
+    async fn get_stake_distribution_for_epoch(
+        &self,
+        epoch: Epoch,
+    ) -> Result<Option<StakeDistribution>, StoreError> {
+        let connection = &*self.connection.lock().await;
+        let provider = SignerRegistrationRecordProvider::new(connection);
+        let cursor = provider
+            .get_by_epoch(&epoch)
+            .map_err(|e| AdapterError::GeneralError(format!("{e}")))?;
+
+        let stake_distribution = StakeDistribution::from_iter(
+            cursor.map(|r| (r.signer_id, r.stake.unwrap_or_default())),
+        );
+
+        match stake_distribution.is_empty() {
+            true => Ok(None),
+            false => Ok(Some(stake_distribution)),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -512,9 +532,7 @@ mod tests {
                         (1, signer_registration_record.signer_id.into()),
                         (
                             2,
-                            i64::try_from(signer_registration_record.epoch_setting_id.0)
-                                .unwrap()
-                                .into(),
+                            Value::Integer(*signer_registration_record.epoch_setting_id as i64),
                         ),
                         (3, signer_registration_record.verification_key.into()),
                         (
@@ -632,9 +650,7 @@ mod tests {
         assert_eq!(
             vec![
                 Value::String(signer_registration_record.signer_id),
-                Value::Integer(
-                    i64::try_from(signer_registration_record.epoch_setting_id.0).unwrap(),
-                ),
+                Value::Integer(*signer_registration_record.epoch_setting_id as i64),
                 Value::String(signer_registration_record.verification_key),
                 signer_registration_record
                     .verification_key_signature

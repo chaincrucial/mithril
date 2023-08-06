@@ -47,7 +47,7 @@ impl MithrilStakeDistribution {
     /// Mithril Stake Distribution is defined by the epoch and signers
     fn compute_hash(&self) -> String {
         let mut hasher = Sha256::new();
-        hasher.update(self.epoch.0.to_be_bytes());
+        hasher.update(self.epoch.to_be_bytes());
 
         for signer_with_stake in &self.signers_with_stake {
             hasher.update(signer_with_stake.compute_hash().as_bytes());
@@ -70,7 +70,7 @@ mod tests {
 
     use super::*;
 
-    const EXPECTED_HASH: &str = "093b4b8044c9b0f33ed678ac34096f4d5071768c8804bf98e9f239af0bbbfeeb";
+    const EXPECTED_HASH: &str = "47675a6fad57040b194655b103bc0439ff9d6920a7ba86bd53756db7ce2952f5";
 
     #[test]
     fn test_compute_hash() {
