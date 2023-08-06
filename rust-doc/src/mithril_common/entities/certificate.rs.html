@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `mithril-common/src/entities/certificate.rs`."><title>certificate.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="mithril_common" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0 (8ede3aae2 2023-07-12)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../mithril_common/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `mithril-common/src/entities/certificate.rs`."><title>certificate.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="mithril_common" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.1 (eb26296b5 2023-08-03)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../mithril_common/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -311,16 +311,32 @@
 <a href="#311" id="311">311</a>
 <a href="#312" id="312">312</a>
 <a href="#313" id="313">313</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::entities::{
-    Beacon, CertificateMetadata, HexEncodedAgregateVerificationKey, HexEncodedGenesisSignature,
-    HexEncodedMultiSignature, ProtocolMessage,
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::crypto_helper::{ProtocolGenesisSignature, ProtocolMultiSignature};
+<span class="kw">use </span><span class="kw">crate</span>::entities::{
+    Beacon, CertificateMetadata, HexEncodedAgregateVerificationKey, ProtocolMessage,
 };
-<span class="kw">use </span>std::ops::Not;
+<span class="kw">use </span>std::cmp::Ordering;
 
 <span class="kw">use </span>sha2::{Digest, Sha256};
 
+<span class="doccomment">/// The signature of a [Certificate]
+</span><span class="attr">#[derive(Clone, Debug)]
+</span><span class="kw">pub enum </span>CertificateSignature {
+    <span class="doccomment">/// Genesis signature created from the original stake distribution
+    /// aka GENESIS_SIG(AVK(-1))
+    </span>GenesisSignature(ProtocolGenesisSignature),
+
+    <span class="doccomment">/// STM multi signature created from a quorum of single signatures from the signers
+    /// aka MULTI_SIG(H(MSG(p,n) || AVK(n-1)))
+    </span>MultiSignature(ProtocolMultiSignature),
+}
+
 <span class="doccomment">/// Certificate represents a Mithril certificate embedding a Mithril STM multisignature
-</span><span class="attr">#[derive(Clone, Debug, PartialEq, Default)]
+</span><span class="attr">#[derive(Clone, Debug)]
 </span><span class="kw">pub struct </span>Certificate {
     <span class="doccomment">/// Hash of the current certificate
     /// Computed from the other fields of the certificate
@@ -354,14 +370,8 @@
     /// aka AVK(n-2)
     </span><span class="kw">pub </span>aggregate_verification_key: HexEncodedAgregateVerificationKey,
 
-    <span class="doccomment">/// STM multi signature created from a quorum of single signatures from the signers
-    /// aka MULTI_SIG(H(MSG(p,n) || AVK(n-1)))
-    </span><span class="kw">pub </span>multi_signature: HexEncodedMultiSignature,
-
-    <span class="comment">// @todo: Should we change this to an option since it&#39;s only filled for genesis certificates ?
-    </span><span class="doccomment">/// Genesis signature created from the original stake distribution
-    /// aka GENESIS_SIG(AVK(-1))
-    </span><span class="kw">pub </span>genesis_signature: HexEncodedGenesisSignature,
+    <span class="doccomment">/// Certificate signature
+    </span><span class="kw">pub </span>signature: CertificateSignature,
 }
 
 <span class="kw">impl </span>Certificate {
@@ -372,8 +382,7 @@
         metadata: CertificateMetadata,
         protocol_message: ProtocolMessage,
         aggregate_verification_key: HexEncodedAgregateVerificationKey,
-        multi_signature: HexEncodedMultiSignature,
-        genesis_signature: HexEncodedGenesisSignature,
+        signature: CertificateSignature,
     ) -&gt; Certificate {
         <span class="kw">let </span>signed_message = protocol_message.compute_hash();
         <span class="kw">let </span><span class="kw-2">mut </span>certificate = Certificate {
@@ -384,8 +393,7 @@
             protocol_message,
             signed_message,
             aggregate_verification_key,
-            multi_signature,
-            genesis_signature,
+            signature,
         };
         certificate.hash = certificate.compute_hash();
         certificate
@@ -400,28 +408,62 @@
         hasher.update(<span class="self">self</span>.protocol_message.compute_hash().as_bytes());
         hasher.update(<span class="self">self</span>.signed_message.as_bytes());
         hasher.update(<span class="self">self</span>.aggregate_verification_key.as_bytes());
-        hasher.update(<span class="self">self</span>.multi_signature.as_bytes());
-        hasher.update(<span class="self">self</span>.genesis_signature.as_bytes());
+        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.signature {
+            CertificateSignature::GenesisSignature(signature) =&gt; {
+                hasher.update(signature.to_bytes_hex());
+            }
+            CertificateSignature::MultiSignature(signature) =&gt; {
+                hasher.update(<span class="kw-2">&amp;</span>signature.to_json_hex().unwrap());
+            }
+        };
         hex::encode(hasher.finalize())
     }
 
     <span class="doccomment">/// Tell if the certificate is a genesis certificate
     </span><span class="kw">pub fn </span>is_genesis(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.genesis_signature.is_empty().not()
+        <span class="macro">matches!</span>(<span class="self">self</span>.signature, CertificateSignature::GenesisSignature(<span class="kw">_</span>))
+    }
+
+    <span class="doccomment">/// Return true if the certificate is chaining into itself (meaning that its hash and previous
+    /// hash are equal).
+    </span><span class="kw">pub fn </span>is_chaining_to_itself(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.hash == <span class="self">self</span>.previous_hash
+    }
+}
+
+<span class="kw">impl </span>PartialEq <span class="kw">for </span>Certificate {
+    <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
+        <span class="self">self</span>.beacon.eq(<span class="kw-2">&amp;</span>other.beacon) &amp;&amp; <span class="self">self</span>.hash.eq(<span class="kw-2">&amp;</span>other.hash)
+    }
+}
+
+<span class="kw">impl </span>PartialOrd <span class="kw">for </span>Certificate {
+    <span class="kw">fn </span>partial_cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Ordering&gt; {
+        <span class="comment">// Order by beacon first then per hash
+        </span><span class="kw">match </span><span class="self">self</span>.beacon.partial_cmp(<span class="kw-2">&amp;</span>other.beacon) {
+            <span class="prelude-val">Some</span>(ordering) <span class="kw">if </span>ordering == Ordering::Equal =&gt; <span class="self">self</span>.hash.partial_cmp(<span class="kw-2">&amp;</span>other.hash),
+            <span class="prelude-val">Some</span>(other) =&gt; <span class="prelude-val">Some</span>(other),
+            <span class="comment">// Beacons may be not comparable (most likely because the network isn&#39;t the same) in
+            // that case we can still order per hash
+            </span><span class="prelude-val">None </span>=&gt; <span class="self">self</span>.hash.partial_cmp(<span class="kw-2">&amp;</span>other.hash),
+        }
     }
 }
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use </span><span class="kw">crate</span>::entities::{ProtocolMessagePartKey, ProtocolParameters, SignerWithStake};
-    <span class="kw">use </span>chrono::{Duration, TimeZone, Timelike, Utc};
+    <span class="kw">use crate</span>::{
+        entities::{ProtocolMessagePartKey, ProtocolParameters, SignerWithStake},
+        test_utils::fake_keys,
+    };
+    <span class="kw">use </span>chrono::{DateTime, Duration, Utc};
 
     <span class="kw">fn </span>get_signers_with_stake() -&gt; Vec&lt;SignerWithStake&gt; {
         <span class="macro">vec!</span>[
             SignerWithStake::new(
                 <span class="string">&quot;1&quot;</span>.to_string(),
-                <span class="string">&quot;7b22766b223a5b3134332c3136312c3235352c34382c37382c35372c3230342c3232302c32352c3232312c3136342c3235322c3234382c31342c35362c3132362c3138362c3133352c3232382c3138382c3134352c3138312c35322c3230302c39372c39392c3231332c34362c302c3139392c3139332c38392c3138372c38382c32392c3133352c3137332c3234342c38362c33362c38332c35342c36372c3136342c362c3133372c39342c37322c362c3130352c3132382c3132382c39332c34382c3137362c31312c342c3234362c3133382c34382c3138302c3133332c39302c3134322c3139322c32342c3139332c3131312c3134322c33312c37362c3131312c3131302c3233342c3135332c39302c3230382c3139322c33312c3132342c39352c3130322c34392c3135382c39392c35322c3232302c3136352c39342c3235312c36382c36392c3132312c31362c3232342c3139345d2c22706f70223a5b3136382c35302c3233332c3139332c31352c3133362c36352c37322c3132332c3134382c3132392c3137362c33382c3139382c3230392c34372c32382c3230342c3137362c3134342c35372c3235312c34322c32382c36362c37362c38392c39372c3135382c36332c35342c3139382c3139342c3137362c3133352c3232312c31342c3138352c3139372c3232352c3230322c39382c3234332c37342c3233332c3232352c3134332c3135312c3134372c3137372c3137302c3131372c36362c3136352c36362c36322c33332c3231362c3233322c37352c36382c3131342c3139352c32322c3130302c36352c34342c3139382c342c3136362c3130322c3233332c3235332c3234302c35392c3137352c36302c3131372c3134322c3131342c3134302c3132322c31372c38372c3131302c3138372c312c31372c31302c3139352c3135342c31332c3234392c38362c35342c3232365d7d&quot;</span>.try_into().unwrap(),
+                fake_keys::signer_verification_key()[<span class="number">1</span>].try_into().unwrap(),
                 <span class="prelude-val">None</span>,
                 <span class="prelude-val">None</span>,
                 <span class="prelude-val">None</span>,
@@ -429,7 +471,7 @@
             ),
             SignerWithStake::new(
                 <span class="string">&quot;2&quot;</span>.to_string(),
-                <span class="string">&quot;7b22766b223a5b3134352c35362c3137352c33322c3132322c3138372c3231342c3232362c3235312c3134382c38382c392c312c3130332c3135392c3134362c38302c3136362c3130372c3234332c3235312c3233362c34312c32382c3131312c3132382c3230372c3136342c3133322c3134372c3232382c38332c3234362c3232382c3137302c36382c38392c37382c36302c32382c3132332c3133302c38382c3233342c33382c39372c34322c36352c312c3130302c35332c31382c37382c3133312c382c36312c3132322c3133312c3233382c38342c3233332c3232332c3135342c3131382c3131382c37332c32382c32372c3130312c37382c38302c3233332c3132332c3230362c3232302c3137342c3133342c3230352c37312c3131302c3131322c3138302c39372c39382c302c3131332c36392c3134352c3233312c3136382c34332c3137332c3137322c35362c3130342c3230385d2c22706f70223a5b3133372c3231342c37352c37352c3134342c3136312c3133372c37392c39342c3134302c3138312c34372c33312c38312c3231332c33312c3137312c3231362c32342c3137342c37382c3234382c3133302c37352c3235352c31312c3134352c3132342c36312c38302c3139302c32372c3231362c3130352c3130362c3234382c39312c3134332c3230342c3130322c3230332c3136322c37362c3130372c31352c35322c36312c38322c3134362c3133302c3132342c37342c382c33342c3136342c3138372c3230332c38322c36342c3130382c3139312c3138352c3138382c37372c3132322c352c3234362c3235352c3130322c3131392c3234372c3139392c3131372c36372c3234312c3134332c32392c3136382c36372c39342c3135312c37382c3132392c3133312c33302c3130312c3137332c31302c36392c36382c3137352c39382c33372c3233392c3139342c32395d7d&quot;</span>.try_into().unwrap(),
+                fake_keys::signer_verification_key()[<span class="number">2</span>].try_into().unwrap(),
                 <span class="prelude-val">None</span>,
                 <span class="prelude-val">None</span>,
                 <span class="prelude-val">None</span>,
@@ -438,17 +480,7 @@
         ]
     }
 
-    <span class="attr">#[test]
-    </span><span class="kw">fn </span>test_certificate_compute_hash() {
-        <span class="kw">const </span>HASH_EXPECTED: <span class="kw-2">&amp;</span>str =
-            <span class="string">&quot;3b5cabc1ddc73c5dfd30064f6b9aef55c464b8359acc1649cb82fc4492be6a15&quot;</span>;
-
-        <span class="kw">let </span>initiated_at = Utc
-            .with_ymd_and_hms(<span class="number">2024</span>, <span class="number">2</span>, <span class="number">12</span>, <span class="number">13</span>, <span class="number">11</span>, <span class="number">47</span>)
-            .unwrap()
-            .with_nanosecond(<span class="number">123043</span>)
-            .unwrap();
-        <span class="kw">let </span>sealed_at = initiated_at + Duration::seconds(<span class="number">100</span>);
+    <span class="kw">fn </span>get_protocol_message() -&gt; ProtocolMessage {
         <span class="kw">let </span><span class="kw-2">mut </span>protocol_message = ProtocolMessage::new();
         protocol_message.set_message_part(
             ProtocolMessagePartKey::SnapshotDigest,
@@ -458,169 +490,145 @@
             ProtocolMessagePartKey::NextAggregateVerificationKey,
             <span class="string">&quot;next-avk-123&quot;</span>.to_string(),
         );
-        <span class="macro">assert_eq!</span>(
+
+        protocol_message
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>test_certificate_compute_hash() {
+        <span class="kw">const </span>HASH_EXPECTED: <span class="kw-2">&amp;</span>str =
+            <span class="string">&quot;255d59cef74aae5bc2e83e87612dea41309551dde0c770d46bf6607971bb9765&quot;</span>;
+
+        <span class="kw">let </span>initiated_at = DateTime::parse_from_rfc3339(<span class="string">&quot;2024-02-12T13:11:47.0123043Z&quot;</span>)
+            .unwrap()
+            .with_timezone(<span class="kw-2">&amp;</span>Utc);
+        <span class="kw">let </span>sealed_at = initiated_at + Duration::seconds(<span class="number">100</span>);
+
+        <span class="kw">let </span>certificate = Certificate::new(
+            <span class="string">&quot;previous_hash&quot;</span>.to_string(),
+            Beacon::new(<span class="string">&quot;testnet&quot;</span>.to_string(), <span class="number">10</span>, <span class="number">100</span>),
+            CertificateMetadata::new(
+                <span class="string">&quot;0.1.0&quot;</span>.to_string(),
+                ProtocolParameters::new(<span class="number">1000</span>, <span class="number">100</span>, <span class="number">0.123</span>),
+                initiated_at,
+                sealed_at,
+                get_signers_with_stake(),
+            ),
+            get_protocol_message(),
+            <span class="string">&quot;aggregate_verification_key&quot;</span>.to_string(),
+            CertificateSignature::MultiSignature(
+                fake_keys::multi_signature()[<span class="number">0</span>].try_into().unwrap(),
+            ),
+        );
+
+        <span class="macro">assert_eq!</span>(HASH_EXPECTED, certificate.compute_hash());
+
+        <span class="macro">assert_ne!</span>(
             HASH_EXPECTED,
-            Certificate::new(
-                <span class="string">&quot;previous_hash&quot;</span>.to_string(),
-                Beacon::new(<span class="string">&quot;testnet&quot;</span>.to_string(), <span class="number">10</span>, <span class="number">100</span>),
-                CertificateMetadata::new(
-                    <span class="string">&quot;0.1.0&quot;</span>.to_string(),
-                    ProtocolParameters::new(<span class="number">1000</span>, <span class="number">100</span>, <span class="number">0.123</span>),
-                    initiated_at,
-                    sealed_at,
-                    get_signers_with_stake(),
-                ),
-                protocol_message.clone(),
-                <span class="string">&quot;aggregate_verification_key&quot;</span>.to_string(),
-                <span class="string">&quot;multi_signature&quot;</span>.to_string(),
-                <span class="string">&quot;genesis_signature&quot;</span>.to_string(),
-            )
-            .compute_hash()
+            Certificate {
+                previous_hash: <span class="string">&quot;previous_hash-modified&quot;</span>.to_string(),
+                ..certificate.clone()
+            }
+            .compute_hash(),
         );
 
         <span class="macro">assert_ne!</span>(
             HASH_EXPECTED,
-            Certificate::new(
-                <span class="string">&quot;previous_hash-modified&quot;</span>.to_string(),
-                Beacon::new(<span class="string">&quot;testnet&quot;</span>.to_string(), <span class="number">10</span>, <span class="number">100</span>),
-                CertificateMetadata::new(
-                    <span class="string">&quot;0.1.0&quot;</span>.to_string(),
-                    ProtocolParameters::new(<span class="number">1000</span>, <span class="number">100</span>, <span class="number">0.123</span>),
-                    initiated_at,
-                    sealed_at,
-                    get_signers_with_stake(),
-                ),
-                protocol_message.clone(),
-                <span class="string">&quot;aggregate_verification_key&quot;</span>.to_string(),
-                <span class="string">&quot;multi_signature&quot;</span>.to_string(),
-                <span class="string">&quot;genesis_signature&quot;</span>.to_string(),
-            )
-            .compute_hash()
+            Certificate {
+                beacon: Beacon::new(<span class="string">&quot;testnet-modified&quot;</span>.to_string(), <span class="number">10</span>, <span class="number">100</span>),
+                ..certificate.clone()
+            }
+            .compute_hash(),
         );
 
         <span class="macro">assert_ne!</span>(
             HASH_EXPECTED,
-            Certificate::new(
-                <span class="string">&quot;previous_hash&quot;</span>.to_string(),
-                Beacon::new(<span class="string">&quot;testnet-modified&quot;</span>.to_string(), <span class="number">10</span>, <span class="number">100</span>),
-                CertificateMetadata::new(
-                    <span class="string">&quot;0.1.0&quot;</span>.to_string(),
-                    ProtocolParameters::new(<span class="number">1000</span>, <span class="number">100</span>, <span class="number">0.123</span>),
-                    initiated_at,
-                    sealed_at,
-                    get_signers_with_stake(),
-                ),
-                protocol_message.clone(),
-                <span class="string">&quot;aggregate_verification_key&quot;</span>.to_string(),
-                <span class="string">&quot;multi_signature&quot;</span>.to_string(),
-                <span class="string">&quot;genesis_signature&quot;</span>.to_string(),
-            )
-            .compute_hash()
+            Certificate {
+                metadata: CertificateMetadata {
+                    protocol_version: <span class="string">&quot;0.1.0-modified&quot;</span>.to_string(),
+                    ..certificate.metadata.clone()
+                },
+                ..certificate.clone()
+            }
+            .compute_hash(),
         );
 
         <span class="macro">assert_ne!</span>(
             HASH_EXPECTED,
-            Certificate::new(
-                <span class="string">&quot;previous_hash&quot;</span>.to_string(),
-                Beacon::new(<span class="string">&quot;testnet&quot;</span>.to_string(), <span class="number">10</span>, <span class="number">100</span>),
-                CertificateMetadata::new(
-                    <span class="string">&quot;0.1.0-modified&quot;</span>.to_string(),
-                    ProtocolParameters::new(<span class="number">1000</span>, <span class="number">100</span>, <span class="number">0.123</span>),
-                    initiated_at,
-                    sealed_at,
-                    get_signers_with_stake(),
-                ),
-                protocol_message.clone(),
-                <span class="string">&quot;aggregate_verification_key&quot;</span>.to_string(),
-                <span class="string">&quot;multi_signature&quot;</span>.to_string(),
-                <span class="string">&quot;genesis_signature&quot;</span>.to_string(),
-            )
-            .compute_hash()
-        );
+            Certificate {
+                protocol_message: {
+                    <span class="kw">let </span><span class="kw-2">mut </span>protocol_message_modified = certificate.protocol_message.clone();
+                    protocol_message_modified.set_message_part(
+                        ProtocolMessagePartKey::NextAggregateVerificationKey,
+                        <span class="string">&quot;next-avk-456&quot;</span>.to_string(),
+                    );
 
-        <span class="kw">let </span><span class="kw-2">mut </span>protocol_message_modified = protocol_message.clone();
-        protocol_message_modified.set_message_part(
-            ProtocolMessagePartKey::NextAggregateVerificationKey,
-            <span class="string">&quot;next-avk-456&quot;</span>.to_string(),
-        );
-        <span class="macro">assert_ne!</span>(
-            HASH_EXPECTED,
-            Certificate::new(
-                <span class="string">&quot;previous_hash&quot;</span>.to_string(),
-                Beacon::new(<span class="string">&quot;testnet&quot;</span>.to_string(), <span class="number">10</span>, <span class="number">100</span>),
-                CertificateMetadata::new(
-                    <span class="string">&quot;0.1.0&quot;</span>.to_string(),
-                    ProtocolParameters::new(<span class="number">1000</span>, <span class="number">100</span>, <span class="number">0.123</span>),
-                    initiated_at,
-                    sealed_at,
-                    get_signers_with_stake(),
-                ),
-                protocol_message_modified.clone(),
-                <span class="string">&quot;aggregate_verification_key&quot;</span>.to_string(),
-                <span class="string">&quot;multi_signature&quot;</span>.to_string(),
-                <span class="string">&quot;genesis_signature&quot;</span>.to_string(),
-            )
-            .compute_hash()
+                    protocol_message_modified
+                },
+                ..certificate.clone()
+            }
+            .compute_hash(),
         );
 
         <span class="macro">assert_ne!</span>(
             HASH_EXPECTED,
-            Certificate::new(
-                <span class="string">&quot;previous_hash&quot;</span>.to_string(),
-                Beacon::new(<span class="string">&quot;testnet&quot;</span>.to_string(), <span class="number">10</span>, <span class="number">100</span>),
-                CertificateMetadata::new(
-                    <span class="string">&quot;0.1.0&quot;</span>.to_string(),
-                    ProtocolParameters::new(<span class="number">1000</span>, <span class="number">100</span>, <span class="number">0.123</span>),
-                    initiated_at,
-                    sealed_at,
-                    get_signers_with_stake(),
-                ),
-                protocol_message.clone(),
-                <span class="string">&quot;aggregate_verification_key-modified&quot;</span>.to_string(),
-                <span class="string">&quot;multi_signature&quot;</span>.to_string(),
-                <span class="string">&quot;genesis_signature&quot;</span>.to_string(),
-            )
-            .compute_hash()
+            Certificate {
+                aggregate_verification_key: <span class="string">&quot;aggregate_verification_key-modified&quot;</span>.to_string(),
+                ..certificate.clone()
+            }
+            .compute_hash(),
         );
 
         <span class="macro">assert_ne!</span>(
             HASH_EXPECTED,
-            Certificate::new(
-                <span class="string">&quot;previous_hash&quot;</span>.to_string(),
-                Beacon::new(<span class="string">&quot;testnet&quot;</span>.to_string(), <span class="number">10</span>, <span class="number">100</span>),
-                CertificateMetadata::new(
-                    <span class="string">&quot;0.1.0&quot;</span>.to_string(),
-                    ProtocolParameters::new(<span class="number">1000</span>, <span class="number">100</span>, <span class="number">0.123</span>),
-                    initiated_at,
-                    sealed_at,
-                    get_signers_with_stake(),
+            Certificate {
+                signature: CertificateSignature::MultiSignature(
+                    fake_keys::multi_signature()[<span class="number">1</span>].try_into().unwrap()
                 ),
-                protocol_message.clone(),
-                <span class="string">&quot;aggregate_verification_key&quot;</span>.to_string(),
-                <span class="string">&quot;multi_signature-modified&quot;</span>.to_string(),
-                <span class="string">&quot;genesis_signature&quot;</span>.to_string(),
-            )
-            .compute_hash()
+                ..certificate.clone()
+            }
+            .compute_hash(),
         );
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>test_genesis_certificate_compute_hash() {
+        <span class="kw">const </span>HASH_EXPECTED: <span class="kw-2">&amp;</span>str =
+            <span class="string">&quot;bbb265e74082896873d3fbe568e4b0118ddcf9a63b4f4b369b92773439e80159&quot;</span>;
+
+        <span class="kw">let </span>initiated_at = DateTime::parse_from_rfc3339(<span class="string">&quot;2024-02-12T13:11:47.0123043Z&quot;</span>)
+            .unwrap()
+            .with_timezone(<span class="kw-2">&amp;</span>Utc);
+        <span class="kw">let </span>sealed_at = initiated_at + Duration::seconds(<span class="number">100</span>);
+
+        <span class="kw">let </span>genesis_certificate = Certificate::new(
+            <span class="string">&quot;previous_hash&quot;</span>.to_string(),
+            Beacon::new(<span class="string">&quot;testnet&quot;</span>.to_string(), <span class="number">10</span>, <span class="number">100</span>),
+            CertificateMetadata::new(
+                <span class="string">&quot;0.1.0&quot;</span>.to_string(),
+                ProtocolParameters::new(<span class="number">1000</span>, <span class="number">100</span>, <span class="number">0.123</span>),
+                initiated_at,
+                sealed_at,
+                get_signers_with_stake(),
+            ),
+            get_protocol_message(),
+            <span class="string">&quot;aggregate_verification_key&quot;</span>.to_string(),
+            CertificateSignature::GenesisSignature(
+                fake_keys::genesis_signature()[<span class="number">0</span>].try_into().unwrap(),
+            ),
+        );
+
+        <span class="macro">assert_eq!</span>(HASH_EXPECTED, genesis_certificate.compute_hash());
 
         <span class="macro">assert_ne!</span>(
             HASH_EXPECTED,
-            Certificate::new(
-                <span class="string">&quot;previous_hash&quot;</span>.to_string(),
-                Beacon::new(<span class="string">&quot;testnet&quot;</span>.to_string(), <span class="number">10</span>, <span class="number">100</span>),
-                CertificateMetadata::new(
-                    <span class="string">&quot;0.1.0&quot;</span>.to_string(),
-                    ProtocolParameters::new(<span class="number">1000</span>, <span class="number">100</span>, <span class="number">0.123</span>),
-                    initiated_at,
-                    sealed_at,
-                    get_signers_with_stake(),
+            Certificate {
+                signature: CertificateSignature::GenesisSignature(
+                    fake_keys::genesis_signature()[<span class="number">1</span>].try_into().unwrap()
                 ),
-                protocol_message.clone(),
-                <span class="string">&quot;aggregate_verification_key&quot;</span>.to_string(),
-                <span class="string">&quot;multi_signature&quot;</span>.to_string(),
-                <span class="string">&quot;genesis_signature-modified&quot;</span>.to_string(),
-            )
-            .compute_hash()
+                ..genesis_certificate.clone()
+            }
+            .compute_hash(),
         );
     }
 }

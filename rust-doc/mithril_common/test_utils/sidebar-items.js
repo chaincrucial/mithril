@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["StakeDistributionGenerationMethod"],"mod":["apispec","fake_data"],"struct":["MithrilFixture","MithrilFixtureBuilder","SignerFixture"]};
+window.SIDEBAR_ITEMS = {"enum":["StakeDistributionGenerationMethod"],"mod":["apispec","fake_data","fake_keys"],"struct":["MithrilFixture","MithrilFixtureBuilder","SignerFixture"]};

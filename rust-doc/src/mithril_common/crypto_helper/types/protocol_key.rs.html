@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `mithril-common/src/crypto_helper/types/protocol_key.rs`."><title>protocol_key.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="mithril_common" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0 (8ede3aae2 2023-07-12)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../mithril_common/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `mithril-common/src/crypto_helper/types/protocol_key.rs`."><title>protocol_key.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="mithril_common" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.1 (eb26296b5 2023-08-03)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../mithril_common/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -206,9 +206,55 @@
 <a href="#206" id="206">206</a>
 <a href="#207" id="207">207</a>
 <a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a>
+<a href="#244" id="244">244</a>
+<a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
+<a href="#247" id="247">247</a>
+<a href="#248" id="248">248</a>
+<a href="#249" id="249">249</a>
+<a href="#250" id="250">250</a>
+<a href="#251" id="251">251</a>
+<a href="#252" id="252">252</a>
+<a href="#253" id="253">253</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>anyhow::{anyhow, Context, <span class="prelude-ty">Result </span><span class="kw">as </span>StdResult};
-<span class="kw">use </span>serde::{de::DeserializeOwned, Deserialize, Serialize};
+<span class="kw">use </span>serde::{de::DeserializeOwned, Deserialize, Serialize, Serializer};
 <span class="kw">use </span>std::any::type_name;
+<span class="kw">use </span>std::ops::Deref;
 
 <span class="kw">use </span><span class="kw">crate</span>::crypto_helper::{key_decode_hex, key_encode_hex};
 
@@ -224,6 +270,21 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) key: T,
 }
 
+<span class="doccomment">/// The codec used to serialize/deserialize a [ProtocolKey].
+///
+/// Default to json hex.
+</span><span class="kw">pub trait </span>ProtocolKeyCodec&lt;T: Serialize + DeserializeOwned&gt;: Sized {
+    <span class="doccomment">/// Do the decoding of the given key
+    </span><span class="kw">fn </span>decode_key(encoded: <span class="kw-2">&amp;</span>str) -&gt; StdResult&lt;ProtocolKey&lt;T&gt;&gt; {
+        ProtocolKey::from_json_hex(encoded)
+    }
+
+    <span class="doccomment">/// Do the encoding of the given key
+    </span><span class="kw">fn </span>encode_key(key: <span class="kw-2">&amp;</span>T) -&gt; StdResult&lt;String&gt; {
+        ProtocolKey::key_to_json_hex(key)
+    }
+}
+
 <span class="kw">impl</span>&lt;T&gt; ProtocolKey&lt;T&gt;
 <span class="kw">where
     </span>T: Serialize + DeserializeOwned,
@@ -233,14 +294,9 @@
         <span class="self">Self </span>{ key }
     }
 
-    <span class="doccomment">/// Get the inner key
-    </span><span class="kw">pub fn </span>key(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>T {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.key
-    }
-
     <span class="doccomment">/// Create an instance from a JSON hex representation
     </span><span class="kw">pub fn </span>from_json_hex(hex_string: <span class="kw-2">&amp;</span>str) -&gt; StdResult&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span>key = key_decode_hex::&lt;T&gt;(<span class="kw-2">&amp;</span>hex_string.to_owned())
+        <span class="kw">let </span>key = key_decode_hex::&lt;T&gt;(hex_string)
             .map_err(|e| <span class="macro">anyhow!</span>(e))
             .with_context(|| {
                 <span class="macro">format!</span>(
@@ -254,7 +310,12 @@
 
     <span class="doccomment">/// Create a JSON hash representation of the key
     </span><span class="kw">pub fn </span>to_json_hex(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; StdResult&lt;String&gt; {
-        key_encode_hex(<span class="kw-2">&amp;</span><span class="self">self</span>.key)
+        <span class="self">Self</span>::key_to_json_hex(<span class="kw-2">&amp;</span><span class="self">self</span>.key)
+    }
+
+    <span class="doccomment">/// Create a JSON hash representation of the given key
+    </span><span class="kw">pub fn </span>key_to_json_hex(key: <span class="kw-2">&amp;</span>T) -&gt; StdResult&lt;String&gt; {
+        key_encode_hex(key)
             .map_err(|e| <span class="macro">anyhow!</span>(e))
             .with_context(|| {
                 <span class="macro">format!</span>(
@@ -265,24 +326,35 @@
     }
 }
 
-<span class="kw">impl</span>&lt;T&gt; Serialize <span class="kw">for </span>ProtocolKey&lt;T&gt;
+<span class="kw">impl</span>&lt;T&gt; Deref <span class="kw">for </span>ProtocolKey&lt;T&gt;
 <span class="kw">where
     </span>T: Serialize + DeserializeOwned,
 {
+    <span class="kw">type </span>Target = T;
+
+    <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.key
+    }
+}
+
+<span class="kw">impl</span>&lt;T&gt; Serialize <span class="kw">for </span>ProtocolKey&lt;T&gt;
+<span class="kw">where
+    </span>T: ProtocolKeyCodec&lt;T&gt; + Serialize + DeserializeOwned,
+{
     <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
-        </span>S: serde::Serializer,
+        </span>S: Serializer,
     {
         <span class="kw">use </span>serde::ser::Error;
-        <span class="kw">let </span>hex = <span class="self">self</span>.to_json_hex().map_err(Error::custom)<span class="question-mark">?</span>;
+        <span class="kw">let </span>encoded = <span class="kw-2">&amp;</span>T::encode_key(<span class="kw-2">&amp;</span><span class="self">self</span>.key).map_err(Error::custom)<span class="question-mark">?</span>;
 
-        hex.serialize(serializer)
+        encoded.serialize(serializer)
     }
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, T&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>ProtocolKey&lt;T&gt;
 <span class="kw">where
-    </span>T: Serialize + DeserializeOwned,
+    </span>T: ProtocolKeyCodec&lt;T&gt; + Serialize + DeserializeOwned,
 {
     <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
     <span class="kw">where
@@ -291,66 +363,84 @@
         <span class="kw">use </span>serde::de::Error;
         <span class="kw">let </span>string = String::deserialize(deserializer)<span class="question-mark">?</span>;
 
-        <span class="self">Self</span>::from_json_hex(<span class="kw-2">&amp;</span>string).map_err(Error::custom)
+        T::decode_key(<span class="kw-2">&amp;</span>string).map_err(Error::custom)
     }
 }
 
 <span class="kw">impl</span>&lt;T&gt; TryFrom&lt;String&gt; <span class="kw">for </span>ProtocolKey&lt;T&gt;
 <span class="kw">where
-    </span>T: Serialize + DeserializeOwned,
+    </span>T: ProtocolKeyCodec&lt;T&gt; + Serialize + DeserializeOwned,
 {
     <span class="kw">type </span>Error = anyhow::Error;
 
     <span class="kw">fn </span>try_from(value: String) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
-        <span class="self">Self</span>::from_json_hex(<span class="kw-2">&amp;</span>value)
+        T::decode_key(<span class="kw-2">&amp;</span>value)
     }
 }
 
 <span class="kw">impl</span>&lt;T&gt; TryFrom&lt;<span class="kw-2">&amp;</span>str&gt; <span class="kw">for </span>ProtocolKey&lt;T&gt;
 <span class="kw">where
-    </span>T: Serialize + DeserializeOwned,
+    </span>T: ProtocolKeyCodec&lt;T&gt; + Serialize + DeserializeOwned,
 {
     <span class="kw">type </span>Error = anyhow::Error;
 
     <span class="kw">fn </span>try_from(value: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
-        <span class="self">Self</span>::from_json_hex(value)
+        T::decode_key(value)
     }
 }
 
 <span class="kw">impl</span>&lt;T&gt; TryFrom&lt;ProtocolKey&lt;T&gt;&gt; <span class="kw">for </span>String
 <span class="kw">where
-    </span>T: Serialize + DeserializeOwned,
+    </span>T: ProtocolKeyCodec&lt;T&gt; + Serialize + DeserializeOwned,
 {
     <span class="kw">type </span>Error = anyhow::Error;
 
     <span class="kw">fn </span>try_from(value: ProtocolKey&lt;T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
-        value.to_json_hex()
+        T::encode_key(<span class="kw-2">&amp;</span>value.key)
     }
 }
 
 <span class="kw">impl</span>&lt;T&gt; TryFrom&lt;<span class="kw-2">&amp;</span>ProtocolKey&lt;T&gt;&gt; <span class="kw">for </span>String
 <span class="kw">where
-    </span>T: Serialize + DeserializeOwned,
+    </span>T: ProtocolKeyCodec&lt;T&gt; + Serialize + DeserializeOwned,
 {
     <span class="kw">type </span>Error = anyhow::Error;
 
     <span class="kw">fn </span>try_from(value: <span class="kw-2">&amp;</span>ProtocolKey&lt;T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
-        value.to_json_hex()
+        T::encode_key(<span class="kw-2">&amp;</span>value.key)
     }
 }
 
-<span class="doccomment">/// Macro to batch define the From&lt;ProtocolKey&gt; to StmType and vis versa
-</span><span class="macro">macro_rules! </span>impl_from_to_stm_types_for_protocol_key {
-    ($(<span class="macro-nonterminal">$stm_type</span>:ty),+) =&gt; {
+<span class="doccomment">/// Macro to batch define a [ProtocolKeyCodec] implementation and conversions From&lt;ProtocolKey&gt; / To
+/// the given type and vis versa.
+</span><span class="macro">macro_rules! </span>impl_codec_and_type_conversions_for_protocol_key {
+    (json_hex_codec =&gt; $(<span class="macro-nonterminal">$key_type</span>:ty),+) =&gt; {
         $(
-            <span class="kw">impl </span>From&lt;ProtocolKey&lt;<span class="macro-nonterminal">$stm_type</span>&gt;&gt; <span class="kw">for </span><span class="macro-nonterminal">$stm_type </span>{
-                <span class="kw">fn </span>from(value: ProtocolKey&lt;<span class="macro-nonterminal">$stm_type</span>&gt;) -&gt; <span class="self">Self </span>{
+            <span class="kw">impl </span><span class="kw">crate</span>::crypto_helper::ProtocolKeyCodec&lt;<span class="macro-nonterminal">$key_type</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$key_type </span>{}
+
+            <span class="kw">impl </span>From&lt;ProtocolKey&lt;<span class="macro-nonterminal">$key_type </span>&gt;&gt; <span class="kw">for </span><span class="macro-nonterminal">$key_type </span>{
+                <span class="kw">fn </span>from(value: ProtocolKey&lt;<span class="macro-nonterminal">$key_type</span>&gt;) -&gt; <span class="self">Self </span>{
                     value.key
                 }
             }
 
-            <span class="kw">impl </span>From&lt;<span class="macro-nonterminal">$stm_type</span>&gt; <span class="kw">for </span>ProtocolKey&lt;<span class="macro-nonterminal">$stm_type</span>&gt; {
-                <span class="kw">fn </span>from(value: <span class="macro-nonterminal">$stm_type</span>) -&gt; <span class="self">Self </span>{
+            <span class="kw">impl </span>From&lt;<span class="macro-nonterminal">$key_type</span>&gt; <span class="kw">for </span>ProtocolKey&lt;<span class="macro-nonterminal">$key_type</span>&gt; {
+                <span class="kw">fn </span>from(value: <span class="macro-nonterminal">$key_type</span>) -&gt; <span class="self">Self </span>{
+                    <span class="self">Self</span>::new(value)
+                }
+            }
+        )*
+    };
+    (no_default_codec =&gt; $(<span class="macro-nonterminal">$key_type</span>:ty),+) =&gt; {
+        $(
+            <span class="kw">impl </span>From&lt;ProtocolKey&lt;<span class="macro-nonterminal">$key_type </span>&gt;&gt; <span class="kw">for </span><span class="macro-nonterminal">$key_type </span>{
+                <span class="kw">fn </span>from(value: ProtocolKey&lt;<span class="macro-nonterminal">$key_type</span>&gt;) -&gt; <span class="self">Self </span>{
+                    value.key
+                }
+            }
+
+            <span class="kw">impl </span>From&lt;<span class="macro-nonterminal">$key_type</span>&gt; <span class="kw">for </span>ProtocolKey&lt;<span class="macro-nonterminal">$key_type</span>&gt; {
+                <span class="kw">fn </span>from(value: <span class="macro-nonterminal">$key_type</span>) -&gt; <span class="self">Self </span>{
                     <span class="self">Self</span>::new(value)
                 }
             }
@@ -360,11 +450,11 @@
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>test {
-    <span class="kw">use </span><span class="kw">crate</span>::crypto_helper::ProtocolKey;
+    <span class="kw">use crate</span>::{crypto_helper::ProtocolKey, test_utils::fake_keys};
     <span class="kw">use </span>mithril_stm::stm::StmVerificationKeyPoP;
     <span class="kw">use </span>serde::{Deserialize, Serialize};
 
-    <span class="kw">const </span>VERIFICATION_KEY: <span class="kw-2">&amp;</span>str = <span class="string">&quot;7b22766b223a5b3134352c32332c3135382c31322c3138332c3230392c33322c3134302c33372c3132342c3136362c3231352c3136302c3231352c3235302c3133342c3135342c3235302c3234312c3230362c3139342c3232322c382c35392c33332c392c35382c322c3235312c31302c33322c3135352c3232372c3134332c3232362c35372c3135312c37342c3139392c3131372c37352c3136382c3134302c34362c3233392c3134352c37322c31362c32312c3138312c3139332c3134362c38362c3231332c3230342c3139332c3232332c32352c3135372c33342c33332c3232372c35312c3132362c3132362c3135362c36342c3232302c3139392c3231332c31362c34352c3131302c3234332c33352c3134382c37312c3231382c3132342c3132332c31362c3132312c3135322c31382c32362c3231322c3231342c3230312c3139302c3137342c3131352c39372c3234392c3235342c3131362c3234335d2c22706f70223a5b3138332c3134352c3133392c3234322c3132302c3136302c35362c3131382c3234322c3230342c39312c38392c32312c3138342c382c34372c3231332c3130352c36332c3135302c32312c3231372c352c382c3231392c3138382c3131342c3230352c3136362c31362c3234302c3234302c3231342c31362c3230342c3231382c3139332c3138312c32342c35362c34352c39392c3234342c38312c32352c35322c3232342c36372c3136382c3136392c3130392c3132322c38372c34392c3137302c3138312c3135312c31352c3235322c3139352c3231312c3233342c3139352c34392c39312c31392c35312c3234312c33332c35382c3134302c3235322c3234322c362c342c34302c32312c3136372c3234392c3235312c33362c38372c36302c39362c36392c3135322c3231302c39382c3136352c352c362c34312c39362c3233352c37352c3138335d7d&quot;</span>;
+    <span class="kw">static </span>VERIFICATION_KEY: <span class="kw-2">&amp;</span>str = fake_keys::signer_verification_key()[<span class="number">0</span>];
 
     <span class="attr">#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
     </span><span class="kw">struct </span>Container {

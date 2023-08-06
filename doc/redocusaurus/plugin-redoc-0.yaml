@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 0.1.8
+  version: 0.1.9
   title: Mithril Aggregator Server
   description: |
     The REST API provided by a Mithril Aggregator Node in a Mithril network.
@@ -253,6 +253,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /signers/registered/{epoch}:
+    get:
+      summary: Get registered signers for an epoch
+      description: |
+        Returns the signers that registered at a given Epoch
+      parameters:
+        - name: epoch
+          in: path
+          description: Cardano Epoch at which the signer registrations are registered
+          required: true
+          schema:
+            type: integer
+            format: int64
+          example: 419
+      responses:
+        '200':
+          description: Registered Signers found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignerRegistrationsMessage'
+        '404':
+          description: Registed Signers not found
+        '412':
+          description: API version mismatch
+        default:
+          description: Registered Signers retrieval error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /register-signer:
     post:
       summary: Registers signer
@@ -318,6 +349,10 @@ paths:
                 $ref: '#/components/schemas/Error'
 components:
   schemas:
+    Epoch:
+      description: Cardano chain epoch number
+      type: integer
+      format: int64
     EpochSettingsMessage:
       description: Epoch settings
       type: object
@@ -328,9 +363,7 @@ components:
         - next_protocol
       properties:
         epoch:
-          description: Cardano chain epoch number
-          type: integer
-          format: int64
+          $ref: '#/components/schemas/Epoch'
         protocol:
           $ref: '#/components/schemas/ProtocolParameters'
         next_protocol:
@@ -385,9 +418,7 @@ components:
           description: Cardano network
           type: string
         epoch:
-          description: Cardano chain epoch number
-          type: integer
-          format: int64
+          $ref: '#/components/schemas/Epoch'
         immutable_file_number:
           description: >-
             Number of the last immutable file that should be included the
@@ -545,9 +576,7 @@ components:
       additionalProperties: true
       properties:
         epoch:
-          description: Cardano chain epoch number
-          type: integer
-          format: int64
+          $ref: '#/components/schemas/Epoch'
       allOf:
         - $ref: '#/components/schemas/Signer'
       example:
@@ -576,6 +605,36 @@ components:
           5b73136372c38302c37342c3136362c313535b5b3232352c3230332c3235352c313030262c38322c39382c32c39332c3138342c3135362c3136362c32312c3131312c3232312c36332c3137372c3232332c3232332c31392c3537
         kes_period: 123
         stake: 1234
+    SignerRegistrationsMessage:
+      description: |
+        This message holds the registered signers at a given epoch.
+      type: object
+      additionalProperties: false
+      properties:
+        registered_at:
+          $ref: '#/components/schemas/Epoch'
+        signing_at:
+          $ref: '#/components/schemas/Epoch'
+        registrations:
+          type: array
+          items:
+            $ref: '#/components/schemas/SignerRegistrationsListItemMessage'
+      example:
+        registered_at: 420
+        signing_at: 422
+        registrations:
+          - party_id: '1234567890'
+            stake: 1234
+    SignerRegistrationsListItemMessage:
+      description: represents an item of a SignerRegistrationsMessage registration
+      type: object
+      additionalProperties: true
+      allOf:
+        - $ref: '#/components/schemas/Stake'
+      properties:
+        party_id:
+          description: The unique identifier of the signer
+          type: string
     RegisterSingleSignatureMessage:
       description: |
         This message holds a Signer Single Signature with the
@@ -754,7 +813,6 @@ components:
         metadata:
           $ref: '#/components/schemas/CertificateListItemMessageMetadata'
         protocol_message:
-          description: Protocol message
           $ref: '#/components/schemas/ProtocolMessage'
         signed_message:
           description: >-
@@ -883,7 +941,6 @@ components:
         metadata:
           $ref: '#/components/schemas/CertificateMetadata'
         protocol_message:
-          description: Protocol message
           $ref: '#/components/schemas/ProtocolMessage'
         signed_message:
           description: >-
@@ -1059,9 +1116,7 @@ components:
           - created_at
         properties:
           epoch:
-            description: Cardano chain epoch number
-            type: integer
-            format: int64
+            $ref: '#/components/schemas/Epoch'
           hash:
             description: Hash of the Mithril stake distribution
             type: string
@@ -1091,9 +1146,7 @@ components:
         - protocol_parameters
       properties:
         epoch:
-          description: Cardano chain epoch number
-          type: integer
-          format: int64
+          $ref: '#/components/schemas/Epoch'
         hash:
           description: Hash of the Mithril stake distribution
           type: string
