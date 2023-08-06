@@ -11,6 +11,11 @@ on:
         type: boolean
         required: false
         default: false
+      registry:
+        description: The registry to push the image to
+        type: string
+        required: false
+        default: ghcr.io
 
 jobs:
   build-push-docker:
@@ -25,11 +30,10 @@ jobs:
       packages: write
 
     env:
-      REGISTRY: ghcr.io
       IMAGE_NAME: ${{ github.repository_owner }}/${{ matrix.project }}
-      DOCKER_FILE: ./${{ matrix.project }}/Dockerfile.ci
+      DOCKER_FILE: ./${{ matrix.project }}/Dockerfile
       CONTEXT: .
-      GITHUB_REF: ${{ github.ref}}
+      GITHUB_REF: ${{ github.ref }}
 
     steps:
       - name: Checkout
@@ -40,7 +44,7 @@ jobs:
       - name: Log in to the Container registry
         uses: docker/login-action@v2
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ${{ inputs.registry }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
@@ -48,19 +52,11 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ inputs.registry }}/${{ env.IMAGE_NAME }}
           tags: |
             latest
             type=raw,value=${{ github.ref_name }}-{{sha}}
-
-      - name: Download built artifacts (Linux-x64)
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          name: mithril-distribution-Linux-X64
-          path: ${{ matrix.project }}
-          commit: ${{ github.sha }}
-          workflow: ci.yml
-          workflow_conclusion: success
+            type=raw,value=${{ inputs.tag }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
