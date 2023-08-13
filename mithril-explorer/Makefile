@@ -7,6 +7,12 @@ install: yarn.lock
 
 build: yarn.lock
 	yarn && yarn run build
+	# Fix to allow refresh & direct linking to the navigation page on static hosting such as Github Pages
+	# this is because the nextJs router is only active for the home page at start.
+	# A 'cleaner' way to do that must exist.
+	mkdir out/registrations
+	cp out/registrations.html out/registrations/index.html
+	cp out/registrations.txt out/registrations/index.txt
 
 serve: build
 	yarn run start
@@ -30,7 +36,22 @@ clean:
 	rm yarn.lock || true
 
 upgrade: clean install
-	yarn upgrade next@latest react@latest react-bootstrap@latest react-dom@latest bootstrap@latest \
-	     bootstrap-icons@latest eslint@latest eslint-config-next@latest @reduxjs/toolkit@latest \
-	     next-redux-wrapper@latest react-redux@latest @popperjs/core@latest \
-	     jest@latest jest-environment-jsdom@latest @testing-library/react@latest @testing-library/jest-dom@latest
+	yarn upgrade \
+		@popperjs/core@latest \
+		@reduxjs/toolkit@latest \
+		bootstrap@latest \
+		bootstrap-icons@latest \
+		chart.js@latest \
+		next@latest \
+		react@latest \
+		react-bootstrap@latest \
+		react-chartjs-2@latest \
+		react-dom@latest \
+		react-redux@latest \
+		@testing-library/jest-dom@latest \
+		@testing-library/react@latest \
+		eslint@latest \
+		eslint-config-next@latest \
+		jest@latest \
+		jest-environment-jsdom@latest \
+		next-router-mock@latest \
