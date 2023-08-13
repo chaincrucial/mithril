@@ -165,7 +165,7 @@
     </span>UnpackDirectoryIsNotWritable(PathBuf, StdError),
 
     <span class="doccomment">/// Unpacking error
-    </span><span class="attr">#[error(<span class="string">&quot;Could not unpack &#39;{filepath}&#39; in directory &#39;{dirpath}&#39;. Error: « {error} ».&quot;</span>)]
+    </span><span class="attr">#[error(<span class="string">&quot;Could not unpack &#39;{filepath}&#39; in directory &#39;{dirpath}&#39;. Error: « {error:#?} ».&quot;</span>)]
     </span>UnpackFailed {
         <span class="doccomment">/// Location of the packed archive.
         </span>filepath: PathBuf,

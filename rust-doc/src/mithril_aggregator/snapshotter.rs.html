@@ -290,15 +290,81 @@
 <a href="#290" id="290">290</a>
 <a href="#291" id="291">291</a>
 <a href="#292" id="292">292</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>flate2::write::GzEncoder;
-<span class="kw">use </span>flate2::Compression;
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>flate2::Compression;
+<span class="kw">use </span>flate2::{read::GzDecoder, write::GzEncoder};
 <span class="kw">use </span>mithril_common::StdResult;
 <span class="kw">use </span>slog_scope::{info, warn};
 <span class="kw">use </span>std::error::Error <span class="kw">as </span>StdError;
 <span class="kw">use </span>std::fs::File;
-<span class="kw">use </span>std::io;
+<span class="kw">use </span>std::io::{<span class="self">self</span>, Seek, SeekFrom};
 <span class="kw">use </span>std::path::{Path, PathBuf};
 <span class="kw">use </span>std::sync::RwLock;
+<span class="kw">use </span>tar::Archive;
 <span class="kw">use </span>thiserror::Error;
 
 <span class="kw">use </span><span class="kw">crate</span>::dependency_injection::DependenciesBuilderError;
@@ -345,6 +411,10 @@
     </span><span class="attr">#[error(<span class="string">&quot;Create archive error: {0}&quot;</span>)]
     </span>CreateArchiveError(<span class="attr">#[from] </span>io::Error),
 
+    <span class="doccomment">/// Set when the snapshotter creates an invalid snapshot.
+    </span><span class="attr">#[error(<span class="string">&quot;Invalid archive error: {0}&quot;</span>)]
+    </span>InvalidArchiveError(String),
+
     <span class="doccomment">/// Set when the snapshotter fails at uploading the snapshot.
     </span><span class="attr">#[error(<span class="string">&quot;Upload file error: `{0}`&quot;</span>)]
     </span>UploadFileError(String),
@@ -357,7 +427,7 @@
 <span class="kw">impl </span>Snapshotter <span class="kw">for </span>GzipSnapshotter {
     <span class="kw">fn </span>snapshot(<span class="kw-2">&amp;</span><span class="self">self</span>, archive_name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;OngoingSnapshot, SnapshotError&gt; {
         <span class="kw">let </span>archive_path = <span class="self">self</span>.ongoing_snapshot_directory.join(archive_name);
-        <span class="kw">let </span>filesize = <span class="self">self</span>.create_archive(<span class="kw-2">&amp;</span>archive_path).map_err(|err| {
+        <span class="kw">let </span>filesize = <span class="self">self</span>.create_and_verify_archive(<span class="kw-2">&amp;</span>archive_path).map_err(|err| {
             <span class="kw">if </span>archive_path.exists() {
                 <span class="kw">if let </span><span class="prelude-val">Err</span>(remove_error) = std::fs::remove_file(<span class="kw-2">&amp;</span>archive_path) {
                     <span class="macro">warn!</span>(
@@ -434,6 +504,32 @@
 
         <span class="prelude-val">Ok</span>(filesize)
     }
+
+    <span class="kw">fn </span>create_and_verify_archive(<span class="kw-2">&amp;</span><span class="self">self</span>, archive_path: <span class="kw-2">&amp;</span>Path) -&gt; <span class="prelude-ty">Result</span>&lt;u64, SnapshotError&gt; {
+        <span class="kw">let </span>filesize = <span class="self">self</span>.create_archive(archive_path)<span class="question-mark">?</span>;
+        <span class="self">self</span>.verify_archive(archive_path)<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(filesize)
+    }
+
+    <span class="comment">// Verify if an archive is corrupted (i.e. at least one entry is invalid)
+    </span><span class="kw">fn </span>verify_archive(<span class="kw-2">&amp;</span><span class="self">self</span>, archive_path: <span class="kw-2">&amp;</span>Path) -&gt; <span class="prelude-ty">Result</span>&lt;(), SnapshotError&gt; {
+        <span class="macro">info!</span>(<span class="string">&quot;verifying archive: {}&quot;</span>, archive_path.display());
+
+        <span class="kw">let </span><span class="kw-2">mut </span>snapshot_file_tar_gz = File::open(archive_path)
+            .map_err(|e| SnapshotError::InvalidArchiveError(e.to_string()))<span class="question-mark">?</span>;
+
+        snapshot_file_tar_gz.seek(SeekFrom::Start(<span class="number">0</span>))<span class="question-mark">?</span>;
+        <span class="kw">let </span>snapshot_file_tar = GzDecoder::new(snapshot_file_tar_gz);
+        <span class="kw">let </span><span class="kw-2">mut </span>snapshot_archive = Archive::new(snapshot_file_tar);
+
+        <span class="kw">match </span>snapshot_archive.entries()<span class="question-mark">?</span>.find(|e| e.is_err()) {
+            <span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(e)) =&gt; <span class="prelude-val">Err</span>(SnapshotError::InvalidArchiveError(<span class="macro">format!</span>(
+                <span class="string">&quot;invalid entry with error: &#39;{e:?}&#39;&quot;
+            </span>))),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Ok</span>(()),
+        }
+    }
 }
 
 <span class="doccomment">/// Snapshotter that does nothing. It is mainly used for test purposes.
@@ -489,6 +585,8 @@
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use </span>std::sync::Arc;
+
+    <span class="kw">use </span>mithril_common::digesters::DummyImmutablesDbBuilder;
 
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
@@ -580,6 +678,38 @@
             .collect();
 
         <span class="macro">assert_eq!</span>(<span class="macro">vec!</span>[<span class="string">&quot;other-process.file&quot;</span>.to_string()], remaining_files);
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>should_create_a_valid_archive_with_gzip_snapshotter() {
+        <span class="kw">let </span>test_dir = get_test_directory(<span class="string">&quot;should_create_a_valid_archive_with_gzip_snapshotter&quot;</span>);
+        <span class="kw">let </span>pending_snapshot_directory = test_dir.join(<span class="string">&quot;pending_snapshot&quot;</span>);
+        <span class="kw">let </span>pending_snapshot_archive_file = <span class="string">&quot;archive.tar.gz&quot;</span>;
+        <span class="kw">let </span>db_directory = test_dir.join(<span class="string">&quot;db&quot;</span>);
+
+        DummyImmutablesDbBuilder::new(db_directory.as_os_str().to_str().unwrap())
+            .with_immutables(<span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>])
+            .append_immutable_trio()
+            .build();
+
+        <span class="kw">let </span>snapshotter = Arc::new(
+            GzipSnapshotter::new(db_directory, pending_snapshot_directory.clone()).unwrap(),
+        );
+
+        snapshotter
+            .create_archive(
+                <span class="kw-2">&amp;</span>pending_snapshot_directory.join(Path::new(pending_snapshot_archive_file)),
+            )
+            .expect(<span class="string">&quot;create_archive should not fail&quot;</span>);
+        snapshotter
+            .verify_archive(
+                <span class="kw-2">&amp;</span>pending_snapshot_directory.join(Path::new(pending_snapshot_archive_file)),
+            )
+            .expect(<span class="string">&quot;verify_archive should not fail&quot;</span>);
+
+        snapshotter
+            .snapshot(pending_snapshot_archive_file)
+            .expect(<span class="string">&quot;Snapshotter::snapshot should not fail.&quot;</span>);
     }
 }
 </code></pre></div></section></main></body></html>
