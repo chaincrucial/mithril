@@ -1,60 +1,37 @@
 ###############################
-# STEP 1: build rust executable
+# STEP 1: build a small image
 ###############################
-FROM rust:bullseye AS rustbuilder
+FROM debian:11-slim
 
 # Create appuser
 RUN adduser --no-create-home --disabled-password appuser
 
-# Set workdir
-WORKDIR /app
-
-# Copy local dependencies
-COPY . .
-
-# Build the app using a dummy main in order to cache dependencies
-RUN mv /app/mithril-aggregator /app/mithril-aggregator.1 && mkdir -p /app/mithril-aggregator/src
-COPY mithril-aggregator/Cargo.toml /app/mithril-aggregator/
-RUN echo "fn  main () {}" > /app/mithril-aggregator/src/main.rs
-RUN cargo build --release -p mithril-aggregator --manifest-path /app/mithril-aggregator/Cargo.toml
-
-# Rollback the rest of the files into the container
-RUN rm -rf /app/mithril-aggregator && mv /app/mithril-aggregator.1 /app/mithril-aggregator
-COPY ./mithril-aggregator/src/main.rs /app/mithril-aggregator/src/
-
-# Build the binary
-RUN cargo build --release -p mithril-aggregator
-RUN /app/target/release/mithril-aggregator --version
-
-###############################
-# STEP 2: build a small image
-###############################
-FROM debian:11-slim
-
-# Args
-ARG CARDANO_BIN_URL=https://github.com/input-output-hk/cardano-node/releases/download/8.1.2/cardano-node-8.1.2-linux.tar.gz
+# Precreate workdir
+RUN mkdir -p /app/bin
 
 # Upgrade
 RUN apt-get update -y && apt-get install -y libssl-dev ca-certificates wget sqlite3 && rm -rf /var/lib/apt/lists/*
 
-# Import the user and group files from the builder
-COPY --from=rustbuilder /etc/passwd /etc/passwd
+# Install cardano-cli
+ARG CARDANO_BIN_URL=https://github.com/input-output-hk/cardano-node/releases/download/8.1.2/cardano-node-8.1.2-linux.tar.gz
+RUN wget -nv -O cardano-bin.tar.gz $CARDANO_BIN_URL \
+    && tar xzf cardano-bin.tar.gz ./cardano-cli && mv cardano-cli /app/bin \
+    && /app/bin/cardano-cli --version \
+    && rm -f cardano-bin.tar.gz
 
-# Copy the executable
-COPY --from=rustbuilder /app/target/release/mithril-aggregator /app/bin/mithril-aggregator
+# Install mithril-aggregator
+ARG MITHRIL_BIN_URL=https://github.com/input-output-hk/mithril/releases/download/2337.0/mithril-2337.0-linux-x64.tar.gz
+RUN wget -nv -O mithril-bin.tar.gz $MITHRIL_BIN_URL \
+    && tar xzf mithril-bin.tar.gz mithril-aggregator && mv mithril-aggregator /app/bin && chmod +x /app/bin/mithril-aggregator \
+    && /app/bin/mithril-aggregator --version \
+    && rm -f mithril-bin.tar.gz
 
 # Copy the config files
-COPY --from=rustbuilder /app/mithril-aggregator/config /app/config
+COPY config /app/config
 
 #Workdir
 WORKDIR /app/
 RUN chown -R appuser /app/
-
-# Install cardano-cli
-RUN wget -nv -O cardano-bin.tar.gz $CARDANO_BIN_URL
-RUN tar xzf cardano-bin.tar.gz ./cardano-cli && mv cardano-cli /app/bin
-RUN /app/bin/cardano-cli --version
-RUN rm -f cardano-bin.tar.gz
 
 # Use an unprivileged user
 USER appuser
