@@ -3,15 +3,21 @@
 # on a debian-compatible x86-64 environment
 FROM debian:11-slim
 
-# Upgrade
-RUN apt-get update -y && apt-get install -y libssl-dev ca-certificates wget && rm -rf /var/lib/apt/lists/*
-
 # Create appuser
 RUN adduser --disabled-password appuser
 
-# Copy the executable
-COPY mithril-client/mithril-client /app/bin/mithril-client
-COPY mithril-client/config /app/config
+# Precreate workdir
+RUN mkdir -p /app/bin
+
+# Upgrade
+RUN apt-get update -y && apt-get install -y libssl-dev ca-certificates wget && rm -rf /var/lib/apt/lists/*
+
+# Install mithril-client
+ARG MITHRIL_BIN_URL=https://github.com/input-output-hk/mithril/releases/download/2337.0/mithril-2337.0-linux-x64.tar.gz
+RUN wget -nv -O mithril-2337.0-linux-x64.tar.gz $MITHRIL_BIN_URL \
+    && tar xzf mithril-2337.0-linux-x64.tar.gz mithril-client && mv mithril-client /app/bin && chmod +x /app/bin/mithril-client \
+    && /app/bin/mithril-client --version \
+    && rm -f mithril-2337.0-linux-x64.tar.gz
 
 # Workdir
 WORKDIR /app/

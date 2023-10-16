@@ -3,24 +3,28 @@
 # on a debian-compatible x86-64 environment
 FROM debian:11-slim
 
-# Args
-ARG CARDANO_BIN_URL=https://github.com/input-output-hk/cardano-node/releases/download/8.1.2/cardano-node-8.1.2-linux.tar.gz
+# Create appuser
+RUN adduser --no-create-home --disabled-password appuser
+
+# Precreate workdir
+RUN mkdir -p /app/bin
 
 # Upgrade
 RUN apt-get update -y && apt-get install -y libssl-dev ca-certificates wget && rm -rf /var/lib/apt/lists/*
 
-# Create appuser
-RUN adduser --no-create-home --disabled-password appuser
-
-# Copy the executable
-COPY mithril-aggregator/mithril-aggregator /app/bin/mithril-aggregator
-COPY mithril-aggregator/config /app/config
-
 # Install cardano-cli
+ARG CARDANO_BIN_URL=https://github.com/input-output-hk/cardano-node/releases/download/8.1.2/cardano-node-8.1.2-linux.tar.gz
 RUN wget -nv -O cardano-bin.tar.gz $CARDANO_BIN_URL
 RUN tar xzf cardano-bin.tar.gz ./cardano-cli && mv cardano-cli /app/bin
 RUN /app/bin/cardano-cli --version
 RUN rm -f cardano-bin.tar.gz
+
+# Install mithril-aggregator
+ARG MITHRIL_BIN_URL=https://github.com/input-output-hk/mithril/releases/download/2337.0/mithril-2337.0-linux-x64.tar.gz
+RUN wget -nv -O mithril-bin.tar.gz $MITHRIL_BIN_URL \
+    && tar xzf mithril-bin.tar.gz mithril-aggregator && mv mithril-aggregator /app/bin && chmod +x /app/bin/mithril-aggregator \
+    && /app/bin/mithril-aggregator --version \
+    && rm -f mithril-bin.tar.gz
 
 #Workdir
 WORKDIR /app/
